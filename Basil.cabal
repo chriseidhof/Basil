@@ -1,0 +1,29 @@
+name:                Basil
+version:             0.0.1
+synopsis:            ER modeling library
+description:         This library is designed for building ER models.
+license:             BSD3
+license-file:        LICENSE
+author:              Chris Eidhof
+maintainer:          Chris Eidhof <chris@eidhof.nl>
+homepage:            http://github.com/chriseidhof/basil
+stability:           Unstable
+category:            Data
+build-type:          Simple
+cabal-version:       >= 1.6
+hs-source-dirs:      src
+exposed-modules:     Basil,
+                     Basil.Core,
+                     Basil.Cache,
+                     Basil.Interface,
+                     Basil.Relations,
+                     Basil.References,
+                     Basil.Data.TList,
+                     Basil.Data.TList4,
+                     Basil.Data.TBoolean
+build-depends:       base >= 3 && < 5,
+                     containers >= 0.2,
+                     fclabels >= 0.4.2,
+                     mtl,
+                     multirec >= 0.4
+
