@@ -11,7 +11,7 @@ import Basil.Cache
 import Basil.Relations
 import Basil.References
 import Basil.Data.TBoolean
-import Basil.Data.TList (TIndex, modTList, lookupTList)
+import Basil.Data.TList (TIndex, modTList, lookupTList, EnumTypes, Witnesses, index, allTypes)
 import Basil.Data.TList4 (TList4)
 import Generics.MultiRec.Base hiding (index)
 import qualified Control.Monad.State as ST
@@ -34,7 +34,7 @@ instance (Show (RelCache phi rels), Show (Cache phi env)) => Show (BasilState ph
 
 
 runBasil :: forall phi p env rels a . (Persist p phi, EnumTypes phi env, ERModel phi rels) => Basil phi env rels p a -> p phi (a, BasilState phi env rels)
-runBasil comp = ST.runStateT comp (BasilState (emptyState (allTypes :: Witnesses phi env)) (emptyRels (relations :: TList4 To phi rels)) 0)
+runBasil comp = ST.runStateT comp (BasilState (emptyState (allTypes :: Witnesses phi env)) (emptyRels (relations :: TList4 Rel phi rels)) 0)
 
 find :: (Persist p phi, El phi ix) => Int -> Basil phi env rels p (Ref phi ix)
 find ix = undefined -- todo return (Ref proof ix)
@@ -57,20 +57,20 @@ new i rels = do let tix = proof
                 let ident        = Fresh freshId
                     ref          = Ref tix ident
                     saveData     = mod cached  (M.insert ident i)
-                    addToTainted = mod tainted (S.insert ident)
-                modM cache    (modTList (saveData . addToTainted) (index tix))
+                    addRelTainted = mod tainted (S.insert ident)
+                modM cache    (modTList (saveData . addRelTainted) (index tix))
                 modM relCache (storeAll ref rels)
                 return ref
 
 setRelation :: (TEq phi, ERModel phi rels, Persist p phi) 
-              => Ref phi r -> ValueWithPointer phi r dir (To phi m1 m2 i1 i2) rels
+              => Ref phi r -> ValueWithPointer phi r dir (Rel phi m1 m2 i1 i2) rels
      -> Basil phi env rels p ()
 setRelation ref rel = modM relCache (setValue ref rel)
 
 getRelation :: (TEq phi, ERModel phi rels, Persist p phi) 
               => Ref phi r 
-              -> (Dir dir, TIndex phi (To phi m1 m2 i1 i2) rels) 
-              -> Basil phi env rels p (Maybe (Value dir (To phi m1 m2 i1 i2)))
+              -> (Dir dir, TIndex phi (Rel phi m1 m2 i1 i2) rels) 
+              -> Basil phi env rels p (Maybe (Value dir (Rel phi m1 m2 i1 i2)))
 getRelation ref rel = fmap (getValue ref rel) $ getM relCache
 
 

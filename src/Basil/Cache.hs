@@ -11,6 +11,7 @@ import Basil.Data.TList4
 import Basil.Data.TList
 import Basil.References
 import Data.Record.Label (mkLabels, label)
+import Generics.MultiRec.Base hiding (index)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -21,8 +22,10 @@ emptyState :: Witnesses phi env -> Cache phi env
 emptyState WNil       = ()
 emptyState (WCons xs) = (TypeCache M.empty S.empty, emptyState xs)
 
-class EnumTypes phi env | phi -> env, env -> phi where 
-  allTypes :: Witnesses phi env
-  index :: phi ix -> TIndex phi ix env
 
 $(mkLabels [''TypeCache])
+
+class (Functor (p phi), Monad (p phi), Fam phi) => Persist (p :: (* -> *) -> * -> *) (phi :: * -> *) where
+  pFetch :: phi ix -> Int -> p phi (Maybe ix)
+  -- pSave  :: Regular a => TRef f a fam -> Int -> a -> p fam ()
+  -- pFetchHasMany :: (Regular a, Regular b) => TRef TypeCache b fam -> NamedLabel a (Many b) -> Int -> p fam [(Int, b)]
