@@ -4,11 +4,13 @@
 {-# LANGUAGE TypeOperators   #-}
 {-# LANGUAGE GADTs   #-}
 {-# LANGUAGE UndecidableInstances   #-}
-module Basil.Interface (runBasil, find, new, attr, getRelation, setRelation, Basil (), BasilState) where
+module Basil.Interface (runBasil, find, new, attr, {- getRelation, setRelation, -} Basil (), BasilState) where
 
 import Basil.Core
 import Basil.Cache
-import Basil.Relations
+import Basil.Relations.Base
+import Basil.Relations.InitialValues
+import Basil.Relations.Interface
 import Basil.References
 import Basil.Data.TBoolean
 import Basil.Data.TList (TIndex, modTList, lookupTList, EnumTypes, Witnesses, index, allTypes)
@@ -34,7 +36,7 @@ instance (Show (RelCache phi rels), Show (Cache phi env)) => Show (BasilState ph
 
 
 runBasil :: forall phi p env rels a . (Persist p phi, EnumTypes phi env, ERModel phi rels) => Basil phi env rels p a -> p phi (a, BasilState phi env rels)
-runBasil comp = ST.runStateT comp (BasilState (emptyState (allTypes :: Witnesses phi env)) (emptyRels (relations :: TList4 Rel phi rels)) 0)
+runBasil comp = ST.runStateT comp (BasilState (emptyState (allTypes :: Witnesses phi env)) (empty (relations :: TList4 Rel phi rels)) 0)
 
 find :: (Persist p phi, El phi ix) => Int -> Basil phi env rels p (Ref phi ix)
 find ix = undefined -- todo return (Ref proof ix)
@@ -62,16 +64,16 @@ new i rels = do let tix = proof
                 modM relCache (storeAll ref rels)
                 return ref
 
-setRelation :: (TEq phi, ERModel phi rels, Persist p phi) 
-              => Ref phi r -> ValueWithPointer phi r dir (Rel phi m1 m2 i1 i2) rels
-     -> Basil phi env rels p ()
-setRelation ref rel = modM relCache (setValue ref rel)
-
-getRelation :: (TEq phi, ERModel phi rels, Persist p phi) 
-              => Ref phi r 
-              -> (Dir dir, TIndex phi (Rel phi m1 m2 i1 i2) rels) 
-              -> Basil phi env rels p (Maybe (Value dir (Rel phi m1 m2 i1 i2)))
-getRelation ref rel = fmap (getValue ref rel) $ getM relCache
+--setRelation :: (TEq phi, ERModel phi rels, Persist p phi) 
+--              => Ref phi r ->  phi r dir (Rel phi m1 m2 i1 i2) rels
+--     -> Basil phi env rels p ()
+--setRelation ref rel = modM relCache (setValue ref rel)
+--
+--getRelation :: (TEq phi, ERModel phi rels, Persist p phi) 
+--              => Ref phi r 
+--              -> (Dir dir, TIndex phi (Rel phi m1 m2 i1 i2) rels) 
+--              -> Basil phi env rels p (Maybe (Value dir (Rel phi m1 m2 i1 i2)))
+--getRelation ref rel = fmap (getValue ref rel) $ getM relCache
 
 
 -- State helper functions

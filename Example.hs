@@ -29,11 +29,11 @@ $(deriveSystem ''Blog [''User, ''Post, ''Comment, ''Tag] "PFBlog")
 type instance PF Blog = PFBlog
 
 type BlogRelationsEnum = ((One `To` Many) User Post
-                       ,((One `To` Many) User Comment
-                       ,((One `To` Many) Post Comment 
-                       ,((One `To` Many) User User
-                       ,()
-                       ))))
+                        ,((One `To` Many) User Comment
+                        ,((One `To` Many) Post Comment 
+                        ,((One `To` Many) User User
+                        ,()
+                        ))))
 
 instance ERModel Blog BlogRelationsEnum where
   relations = TCons4 User    Post authorPosts 
