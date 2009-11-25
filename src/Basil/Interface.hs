@@ -8,9 +8,7 @@ module Basil.Interface (runBasil, find, new, attr, {- getRelation, setRelation, 
 
 import Basil.Core
 import Basil.Cache
-import Basil.Relations.Base
-import Basil.Relations.InitialValues
-import Basil.Relations.Interface
+import Basil.Relations
 import Basil.References
 import Basil.Data.TBoolean
 import Basil.Data.TList (TIndex, modTList, lookupTList, EnumTypes, Witnesses, index, allTypes)
