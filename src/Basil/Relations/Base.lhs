@@ -18,25 +18,32 @@ This is the base module where we define how to store relationships.
 
 %endif
 
-We only consider relationships between two entities with a cardinality of one-to-one, one-to-many, many-to-one or many-to-many. Relationships are grouped into relationship sets, where all relationships are between the same entity types and have the same cardinality.
+We only consider relationships between two entities with a cardinality of
+one-to-one, one-to-many, many-to-one or many-to-many. Relationships are grouped
+into relationship sets, where all relationships are between the same entity
+types and have the same cardinality. Based on the cardinality, we can choose a
+datatype to store the relationships:
 
 
-> type  family    RelationStorage rel :: *
-> type  instance  RelationStorage (Rel phi One  r1 One  r2)  = 
->                 M.Map   (Ref phi r1)  (Ref phi r2)
-> type  instance  RelationStorage (Rel phi One  r1 Many r2)  = 
->                 M.Map   (Ref phi r2)  (Ref phi r1)
-> type  instance  RelationStorage (Rel phi Many r1 One  r2)  = 
->                 M.Map   (Ref phi r1)  (Ref phi r2)
-> type  instance  RelationStorage (Rel phi Many r1 Many r2)  = 
->                 (M.Map  (Ref phi r1)  (S.Set (Ref phi r2)), M.Map (Ref phi r2) (S.Set (Ref phi r1)))
+> type  family     RelationStorage rel :: *
+> type  instance   RelationStorage (Rel phi One  r1 One  r2)  = 
+>                  M.Map   (Ref phi r1)  (Ref phi r2)
+> type  instance   RelationStorage (Rel phi One  r1 Many r2)  = 
+>                  M.Map   (Ref phi r2)  (Ref phi r1)
+> type  instance   RelationStorage (Rel phi Many r1 One  r2)  = 
+>                  M.Map   (Ref phi r1)  (Ref phi r2)
+> type  instance   RelationStorage (Rel phi Many r1 Many r2)  = 
+>                  ( M.Map  (Ref phi r1)  (S.Set (Ref phi r2))
+>                  , M.Map (Ref phi r2) (S.Set (Ref phi r1)))
 
-For an ER model, we enumerate all the relationship sets on the type-level using nested pairs that are growing to the right. We can write a function on those type-level lists that computes how relationships for an entire ER model are stored:
+For an ER model, we enumerate all the relationship sets on the type-level using
+nested pairs that are growing to the right. We can reuse our |TList| datatype
+for storing all relationship sets |rels| in an ER model |phi|.
 
 > type RelCache phi rels = TList RelationStorageN phi rels
 
-|RelationStorageN| is just a newtype, as GHC does not support partially applied
-type families.
+|RelationStorageN| is a newtype because Haskell does not support partially
+applied type families:
 
 > newtype RelationStorageN a = RelationStorageN { unRelationStorageN :: RelationStorage a}
 
@@ -52,22 +59,30 @@ sets in an ER model will not have this suffix.
 > emptyS (Rel  Many  _  _  One   _ _) = M.empty
 > emptyS (Rel  Many  _  _  Many  _ _) = (M.empty, M.empty)
 
+TODO: explain what |TList4| is and why we need it.
+
 
 We can map over the list of all relationship sets |rels| to create an empty
-datastructure for each relationship set in the ER model:
+datastructure for each relationship set in the ER model. We give its type, but
+omit its definition.
 
 > empty :: TList4 Rel phi rels -> RelCache phi rels
-> empty relations = worker (RelationStorageN . emptyS) relations
 
-The |worker| function is much like |map|, it lifts an |f| into a |g| structure
+%if False
+
+> empty relations = fromTList4 (RelationStorageN . emptyS) relations
+
+
+The |fromTList4| function is much like |map|, it lifts an |f| into a |g| structure
 that is indexed by that |f|:
 
-> worker  :: (forall a b c d . f phi a b c d -> g (f phi a b c d)) 
->         -> TList4 f phi rels 
->         -> TList g phi rels
-> worker f TNil4                = ()
-> worker f (TCons4 _ _ rel xs)  = (f rel, worker f xs)
+> fromTList4  ::  (forall a b c d . f phi a b c d -> g (f phi a b c d)) 
+>             ->  TList4 f phi rels 
+>             ->  TList g phi rels
+> fromTList4 f TNil4                = ()
+> fromTList4 f (TCons4 _ _ rel xs)  = (f rel, fromTList4 f xs)
 
+%endif
 
 Given two references and a relationship set we can insert the relationship into
 the |RelationStorage| for that specific relationshipset . By pattern-matching on
@@ -89,14 +104,16 @@ the |Rel| datatype we can alter the storage for that specific relationship set.
 We can now lift that function to the storage of all relationship sets in a
 model:
 
-> insert ::  forall phi rels c1 l c2 r . (ERModel phi rels) 
+> insert ::  (ERModel phi rels) 
 >        =>  TIndex phi (Rel phi c1 l c2 r) rels 
 >        ->  Ref phi l 
 >        ->  Ref phi r
 >        ->  RelCache phi rels
 >        ->  RelCache phi rels
 > insert ix l r =  modTList 
->                  (RelationStorageN . insertS l r (lookupTList4 ix relations) . unRelationStorageN)
+>                  (  RelationStorageN 
+>                  .  insertS l r (lookupTList4 ix relations) 
+>                  .  unRelationStorageN)
 >                  ix
 
 Another essential operation is |lookup|. Given a reference to an entity and a
@@ -140,7 +157,7 @@ relationship and has a very similar definition.
 We can again lift both |lookup| and |lookup'|, which work on individual
 relationship sets, to all relationship sets in an ER model:
 
-> lookup  ::  forall phi rels c1 l c2 r . (ERModel phi rels) 
+> lookup  ::  (ERModel phi rels) 
 >         =>  TIndex phi (Rel phi c1 l c2 r) rels 
 >         ->  Ref phi l 
 >         ->  RelCache phi rels
@@ -149,7 +166,7 @@ relationship sets, to all relationship sets in an ER model:
 
 %if False
 
-> lookup'  ::  forall phi rels c1 l c2 r . (ERModel phi rels) 
+> lookup'  ::  (ERModel phi rels) 
 >          =>  TIndex phi (Rel phi c1 l c2 r) rels 
 >          ->  Ref phi r 
 >          ->  RelCache phi rels
