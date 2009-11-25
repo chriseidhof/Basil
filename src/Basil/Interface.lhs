@@ -20,7 +20,7 @@ import qualified Data.Set as S
 import Data.Record.Label hiding (set)
 import Prelude hiding (mod)
 
-type Basil phi env rels p a = (Persist p phi, EnumTypes phi env, ERModel phi rels) => ST.StateT (BasilState phi env rels) (p phi) a
+type Basil phi env rels a = (EnumTypes phi env, ERModel phi rels) => ST.State (BasilState phi env rels) a
 
 data BasilState phi env rels where
   BasilState :: (EnumTypes phi env, ERModel phi rels)
@@ -33,24 +33,24 @@ instance (Show (RelCache phi rels), Show (Cache phi env)) => Show (BasilState ph
   show (BasilState x y z) = "BasilState {" ++ unwords [show x, show y, show z] ++ "}"
 
 
-runBasil :: forall phi p env rels a . (Persist p phi, EnumTypes phi env, ERModel phi rels) => Basil phi env rels p a -> p phi (a, BasilState phi env rels)
-runBasil comp = ST.runStateT comp (BasilState (emptyState (allTypes :: Witnesses phi env)) (empty (relations :: TList4 Rel phi rels)) 0)
+runBasil :: forall phi env rels a . (EnumTypes phi env, ERModel phi rels) => Basil phi env rels a -> (a, BasilState phi env rels)
+runBasil comp = ST.runState comp (BasilState (emptyState (allTypes :: Witnesses phi env)) (empty (relations :: TList4 Rel phi rels)) 0)
 
-find :: (Persist p phi, El phi ix) => Int -> Basil phi env rels p (Ref phi ix)
+find :: (El phi ix) => Int -> Basil phi env rels (Ref phi ix)
 find ix = undefined -- todo return (Ref proof ix)
 
-findCache :: (Persist p phi, El phi ix) => Ref phi ix -> Basil phi env rels p (Maybe ix)
+findCache :: (El phi ix) => Ref phi ix -> Basil phi env rels (Maybe ix)
 findCache (Ref tix ix) = do st <- getM cache
                             return (M.lookup ix $ get cached $ lookupTList (index tix) st)
 
-attr :: (Persist p phi, El phi ix) => Ref phi ix -> (ix :-> att) -> Basil phi env rels p att
+attr :: (El phi ix) => Ref phi ix -> (ix :-> att) -> Basil phi env rels att
 attr r@(Ref tix ix) at = do val <- findCache r
                             case val of
                                  Just x  -> return $ get at x
                                  Nothing -> error "Not found in cache."
 
-new :: (Persist p phi, El phi ix, ERModel phi rels, TEq phi) 
-    => ix -> PList phi ix (InitialValues phi ix rels rels) rels -> Basil phi env rels p (Ref phi ix)
+new :: (El phi ix, ERModel phi rels, TEq phi) 
+    => ix -> PList phi ix (InitialValues phi ix rels rels) rels -> Basil phi env rels (Ref phi ix)
 new i rels = do let tix = proof
                 freshId <- getM freshVariable
                 modM freshVariable (+1)
