@@ -24,49 +24,80 @@
 
 %endif
 
-> type Basil phi env rels a = (EnumTypes phi env, ERModel phi rels) => ST.State (BasilState phi env rels) a
-> 
+We will now combine the storage of relations and the storage of entities to build the actual in-memory database. For convenience, we introduce a |BasilState| datatype that also stores an |Int| value that is a fresh-variable supply for creating new entities.
+
 > data BasilState phi env rels where
 >   BasilState :: (EnumTypes phi env, ERModel phi rels)
 >              => Cache phi env 
 >              -> RelCache phi rels
 >              -> Int 
 >              -> BasilState phi env rels
-> 
+
+We introduce a type synonym |Basil| that is a state monad with |BasilState| as its state.
+
+> type Basil phi env rels a = (EnumTypes phi env, ERModel phi rels) => ST.State (BasilState phi env rels) a
+
+%if False
+
 > instance (Show (RelCache phi rels), Show (Cache phi env)) => Show (BasilState phi env rels) where
 >   show (BasilState x y z) = "BasilState {" ++ unwords [show x, show y, show z] ++ "}"
-> 
-> 
-> runBasil :: forall phi env rels a . (EnumTypes phi env, ERModel phi rels) => Basil phi env rels a -> (a, BasilState phi env rels)
-> runBasil comp = ST.runState comp (BasilState (emptyState (allTypes :: Witnesses phi env)) (empty (relations :: TList4 Rel phi rels)) 0)
-> 
-> find :: (El phi ix) => Int -> Basil phi env rels (Ref phi ix)
-> find ix = undefined -- todo return (Ref proof ix)
-> 
-> findCache :: (El phi ix) => Ref phi ix -> Basil phi env rels (Maybe ix)
-> findCache (Ref tix ix) = do st <- getM cache
->                             return (M.lookup ix $ get cached $ lookupTList (index tix) st)
-> 
+
+%endif
+
+We can now define a |find| method that searches the state for the entity of type |ix|, given a reference to it.
+
+> find :: (El phi ix) => Ref phi ix -> Basil phi env rels (Maybe ix)
+> find (Ref tix ix) = do st <- getM cache
+>                        return (M.lookup ix $ get cached $ lookupTList (index tix) st)
+
+Creating a new entitiy is a bit more involved. This is where our library shines: we not only ask for a value of |ix|, but also ask for all its |InitialValues| (see section \ref{sec:initialvalues}). This way, we make sure that all the right relationships are added.
+
+> new  ::  (El phi ix, ERModel phi rels, TEq phi) 
+>      =>  ix 
+>      ->  PList phi ix (InitialValues phi ix rels rels) rels 
+>      ->  Basil phi env rels (Ref phi ix)
+
+First, we will get a fresh integer that can be used for creating a reference. We then store the entity, and finally, the relationships. The |addRelTainted| can safely be ignored for now, but will be used when saving the in-memory database to a relational database in section \ref{sec:rdb}.
+
+> new i rels = do  let tix = proof
+>                  freshId <- getM freshVariable
+>                  modM freshVariable (+1)
+>                  let  ident          = Fresh freshId
+>                       ref            = Ref tix ident
+>                  let  saveData       = mod  cached   (M.insert ident i)
+>                       addRelTainted  = mod  tainted  (S.insert ident)
+>                  modM cache    (modTList (saveData . addRelTainted) (index tix))
+>                  modM relCache (storeAll ref rels)
+>                  return ref
+
+
+
+
+
+Finally, we can provide a |runBasil| method that executes an in-memory database expression, yielding an |a| and the resulting state:
+
+> runBasil  ::  forall phi env rels a . (EnumTypes phi env, ERModel phi rels) 
+>           =>  Basil phi env rels a 
+>           ->  (a, BasilState phi env rels)
+> runBasil comp = ST.runState comp  (BasilState  (emptyState (allTypes :: Witnesses phi env)) 
+>                                                (empty (relations :: TList4 Rel phi rels))
+>                                                0
+>                                   )
+
+TODO: query relationships.
+
+We now have achieved the goals stated in the introduction of this section: we can store and query both entities and relationships, while maintaining the soundness of the relationship sets.
+
+
+%if False
+
 > attr :: (El phi ix) => Ref phi ix -> (ix :-> att) -> Basil phi env rels att
-> attr r@(Ref tix ix) at = do val <- findCache r
+> attr r@(Ref tix ix) at = do val <- find r
 >                             case val of
 >                                  Just x  -> return $ get at x
 >                                  Nothing -> error "Not found in cache."
 > 
-> new :: (El phi ix, ERModel phi rels, TEq phi) 
->     => ix -> PList phi ix (InitialValues phi ix rels rels) rels -> Basil phi env rels (Ref phi ix)
-> new i rels = do let tix = proof
->                 freshId <- getM freshVariable
->                 modM freshVariable (+1)
->                 let ident        = Fresh freshId
->                     ref          = Ref tix ident
->                     saveData     = mod cached  (M.insert ident i)
->                     addRelTainted = mod tainted (S.insert ident)
->                 modM cache    (modTList (saveData . addRelTainted) (index tix))
->                 modM relCache (storeAll ref rels)
->                 return ref
 
-%if False
 
 > 
 > --setRelation :: (TEq phi, ERModel phi rels, Persist p phi) 
