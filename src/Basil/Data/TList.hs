@@ -13,6 +13,9 @@ type family TList (f :: * -> *)  (phi :: * -> *) env :: *
 type instance TList f phi () = ()
 type instance TList f phi (x, xs) = (f x, TList f phi xs)
 
+infixr .*
+(.*) = (,)
+
 lookupTList :: TIndex phi ix env
                  -> TList f phi env
                  -> f ix

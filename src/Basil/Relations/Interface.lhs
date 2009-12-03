@@ -23,16 +23,7 @@ that is created. |env| keeps track of all the initial values in the |PList|. It
 is a type-level list that grows at each |PCons|. Finally,
 |rels| is a parameter that describes all the relationship sets in the ER model. It is
 necessary to ensure an |InitialValue| always points to a valid relationship set
-in the ER model. We have introduced a type-level let, otherwise the type signature would
-become very big and hard to understand.
-
-%format Myr = "\beta"
-%format tlet = "\mathbf{tlet}"
-
-\begin{spec}
-tlet Myr = Rel phi c1 t1 c2 t2 in
-\end{spec}
-
+in the ER model. 
 
 > data PList (phi :: * -> *) r env rels where
 
@@ -42,17 +33,11 @@ The constructor |PNil| builds an empty list:
 
 The |PCons| takes an |InitialValue| for the |SourceType| of the relation and combines that with another |PList| that contains elements of the same |SourceType|. The |SourceType| of a |Rel phi c1 t1 c2 t2| can be either |t1| or |t2|.
 
-%{
-%format (Rel phi c1 t1 c2 t2) = "\beta"
-
->  PCons  ::  InitialValue phi (SourceType dir (Rel phi c1 t1 c2 t2)) dir (Rel phi c1 t1 c2 t2) rels 
->         ->  PList phi  (SourceType dir (Rel phi c1 t1 c2 t2)) env rels 
->         ->  PList phi  (SourceType dir (Rel phi c1 t1 c2 t2)) 
->                        (InitialValue phi  (SourceType dir (Rel phi c1 t1 c2 t2)) 
->                                           dir 
->                                           (Rel phi c1 t1 c2 t2)
->                                           rels
->                        , env)
+>  PCons  ::  (Rel phi c1 t1 c2 t2 ~ rel, src ~ SourceType dir rel)
+>         =>  InitialValue phi src dir rel rels 
+>         ->  PList phi  src env rels 
+>         ->  PList phi  src 
+>                        (InitialValue phi src dir rel rels, env)
 >                        rels
 
 The function |storeAll| takes a reference to |r| and a |PList| containing the initial values for the relationships involving |r|, and stores them by applying |setValue| on each |InitialValue|.
@@ -68,7 +53,7 @@ The function |storeAll| takes a reference to |r| and a |PList| containing the in
 
 The function |setValue| simply a relationship between a reference and an initial value. Based on the direction stored in the |InitialValue| it can determine the right order of the arguments.
 
-> setValue  ::  (TEq phi, ERModel phi rels)
+> setValue  :: (TEq phi, ERModel phi rels)
 >           =>  Ref phi (SourceType dir (Rel phi c1 t1 c2 t2))
 >           ->  InitialValue phi r dir (Rel phi c1 t1 c2 t2) rels
 >           ->  RelCache phi rels
