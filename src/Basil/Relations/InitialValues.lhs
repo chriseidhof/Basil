@@ -3,13 +3,11 @@
 > {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types, GADTs, EmptyDataDecls #-}
 > module Basil.Relations.InitialValues where
 >
-> import Basil.Cache
 > import Basil.Core
 > import Basil.References
 > import Basil.Data.TBoolean
 > import Basil.Data.TList
 > import Basil.Data.TList4
-> import Basil.Relations.Base
 > import qualified Data.Map as M
 > import qualified Data.Set as S
 > import qualified Data.Maybe as Maybe

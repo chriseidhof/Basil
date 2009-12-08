@@ -2,17 +2,15 @@
 
 module CoreData2 where
 
+import Basil
 import Data.Record.Label (mkLabels, label)
 import Generics.MultiRec.Base hiding (Tag)
 import Generics.MultiRec.TH
-import Basil
-import qualified Basil.Relations.Base as B
-import qualified Basil.Relations.InitialValues as I
-import qualified Basil.Relations.Interface as X
-import qualified Data.Map as M
 import Prelude hiding (log)
-import Basil.Data.TList4
-import Control.Monad.Trans (lift)
+import qualified Basil.InMemory.Relations.Storage as B
+import qualified Basil.InMemory.Relations as X
+import qualified Basil.Relations.InitialValues as I
+import qualified Data.Map as M
 
 data User = UserC {name :: String, password :: String, age :: Int} deriving (Show)
 data Post = PostC {title :: String, body :: String} deriving (Show)

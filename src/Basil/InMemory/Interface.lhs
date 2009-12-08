@@ -6,15 +6,16 @@
 > {-# LANGUAGE TypeOperators   #-}
 > {-# LANGUAGE GADTs   #-}
 > {-# LANGUAGE UndecidableInstances   #-}
-> module Basil.Interface (runBasil, find, new, attr, {- getRelation, setRelation, -} Basil (), BasilState) where
+> module Basil.InMemory.Interface (runBasil, find, new, attr, {- getRelation, setRelation, -} Basil (), BasilState) where
 > 
 > import Basil.Core
-> import Basil.Cache
+> import Basil.InMemory.Cache
 > import Basil.Relations
 > import Basil.References
 > import Basil.Data.TBoolean
 > import Basil.Data.TList (TIndex, modTList, lookupTList, EnumTypes, Witnesses, index, allTypes)
 > import Basil.Data.TList4 (TList4)
+> import Control.Applicative hiding (empty)
 > import Generics.MultiRec.Base hiding (index)
 > import qualified Control.Monad.State as ST
 > import qualified Data.Map as M
@@ -35,7 +36,8 @@ We will now combine the storage of relations and the storage of entities to buil
 
 We introduce a type synonym |Basil| that is a state monad with |BasilState| as its state.
 
-> type Basil phi env rels a = (EnumTypes phi env, ERModel phi rels) => ST.State (BasilState phi env rels) a
+> type Basil phi env rels a =   (EnumTypes phi env, ERModel phi rels, TEq phi) 
+>                           =>  ST.State (BasilState phi env rels) a
 
 %if False
 
@@ -44,18 +46,18 @@ We introduce a type synonym |Basil| that is a state monad with |BasilState| as i
 
 %endif
 
-We can now define a |find| method that searches the state for the entity of type |ix|, given a reference to it.
+We can now define a |find| method that searches the state for the entity of type |entity|, given a reference to it.
 
-> find :: (El phi ix) => Ref phi ix -> Basil phi env rels (Maybe ix)
-> find (Ref tix ix) = do st <- getM cache
->                        return (M.lookup ix $ get cached $ lookupTList (index tix) st)
+> find :: (El phi entity) => Ref phi entity -> Basil phi env rels (Maybe entity)
+> find (Ref tix entity)  =    M.lookup entity . get cached . lookupTList (index tix) 
+>                        <$>  getM cache
 
-Creating a new entitiy is a bit more involved. This is where our library shines: we not only ask for a value of |ix|, but also ask for all its |InitialValues| (see section \ref{sec:initialvalues}). This way, we make sure that all the right relationships are added.
+Creating a new entitiy is a bit more involved. This is where our library shines: we not only ask for a value of |entity|, but also ask for all its |InitialValues| (see section \ref{sec:initialvalues}). This way, we make sure that all the right relationships are added.
 
-> new  ::  (El phi ix, ERModel phi rels, TEq phi) 
->      =>  ix 
->      ->  PList phi ix (InitialValues phi ix rels rels) rels 
->      ->  Basil phi env rels (Ref phi ix)
+> new  ::  (El phi entity) 
+>      =>  entity 
+>      ->  PList phi entity (InitialValues phi entity rels rels) rels 
+>      ->  Basil phi env rels (Ref phi entity)
 
 First, we will get a fresh integer that can be used for creating a reference. We then store the entity, and finally, the relationships. 
 
@@ -75,7 +77,7 @@ First, we will get a fresh integer that can be used for creating a reference. We
 
 Finally, we can provide a |runBasil| method that executes an in-memory database expression, yielding an |a| and the resulting state:
 
-> runBasil  ::  forall phi env rels a . (EnumTypes phi env, ERModel phi rels) 
+> runBasil  ::  forall phi env rels a . (TEq phi, EnumTypes phi env, ERModel phi rels) 
 >           =>  Basil phi env rels a 
 >           ->  (a, BasilState phi env rels)
 > runBasil comp = ST.runState comp  (BasilState  (emptyState (allTypes :: Witnesses phi env)) 
@@ -90,11 +92,11 @@ We now have achieved the goals stated in the introduction of this section: we ca
 
 %if False
 
-> attr :: (El phi ix) => Ref phi ix -> (ix :-> att) -> Basil phi env rels att
-> attr r@(Ref tix ix) at = do val <- find r
->                             case val of
->                                  Just x  -> return $ get at x
->                                  Nothing -> error "Not found in cache."
+> attr :: (El phi entity) => Ref phi entity -> (entity :-> att) -> Basil phi env rels att
+> attr r@(Ref tix entity) at = do val <- find r
+>                                 case val of
+>                                      Just x  -> return $ get at x
+>                                      Nothing -> error "Not found in cache."
 > 
 
 

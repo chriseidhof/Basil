@@ -1,9 +1,9 @@
 %if False 
 
 > {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types #-}
-> module Basil.Relations.Base where
+> module Basil.InMemory.Relations.Storage where
 > 
-> import Basil.Cache
+> import Basil.InMemory.Cache
 > import Basil.Core
 > import Basil.References
 > import Basil.Data.TList

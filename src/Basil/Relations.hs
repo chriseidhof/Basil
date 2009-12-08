@@ -1,8 +1,8 @@
-module Basil.Relations ( module Basil.Relations.Base
-                       , module Basil.Relations.InitialValues
-                       , module Basil.Relations.Interface
+module Basil.Relations ( module Basil.Relations.InitialValues
+                       , module Basil.InMemory.Relations.Storage
+                       , module Basil.InMemory.Relations
                        ) where
 
-import Basil.Relations.Base
 import Basil.Relations.InitialValues
-import Basil.Relations.Interface
+import Basil.InMemory.Relations
+import Basil.InMemory.Relations.Storage

@@ -12,3 +12,5 @@ normalization steps. If we consider the \relationship{releases} relationship,
 there is always exactly one \entset{compiler} that belongs to a
 \entset{release}. We can eliminate the table by adding a field
 \attrib{compiler\_id} to the table for the \entset{releases} entity set.
+
+TODO: write about implementation.

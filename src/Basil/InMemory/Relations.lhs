@@ -1,15 +1,14 @@
 %if False
 
 > {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types, GADTs, EmptyDataDecls #-}
-> module Basil.Relations.Interface where
+> module Basil.InMemory.Relations where
 >
-> import Basil.Cache
 > import Basil.Core
 > import Basil.References
 > import Basil.Data.TBoolean
 > import Basil.Data.TList
 > import Basil.Data.TList4
-> import Basil.Relations.Base
+> import Basil.InMemory.Relations.Storage
 > import Basil.Relations.InitialValues
 > import qualified Data.Map as M
 > import qualified Data.Set as S

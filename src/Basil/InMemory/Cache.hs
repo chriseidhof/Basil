@@ -4,7 +4,7 @@
 {-# LANGUAGE GADTs          #-}
 {-# LANGUAGE FunctionalDependencies          #-}
 {-# LANGUAGE TemplateHaskell          #-}
-module Basil.Cache where
+module Basil.InMemory.Cache (Cache, TypeCache, emptyState, cached) where
 
 import Basil.Core
 import Basil.Data.TList4
