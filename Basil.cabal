@@ -12,15 +12,24 @@ category:            Data
 build-type:          Simple
 cabal-version:       >= 1.6
 hs-source-dirs:      src
-exposed-modules:     Basil,
-                     Basil.Core,
-                     Basil.Cache,
-                     Basil.Interface,
-                     Basil.Relations,
-                     Basil.References,
-                     Basil.Data.TList,
-                     Basil.Data.TList4,
+exposed-modules:     Basil
+                     Basil.Core
                      Basil.Data.TBoolean
+                     Basil.Data.TList
+                     Basil.Data.TList4
+                     Basil.Database.Relational.Core
+                     Basil.Database.Relational.CoreExample
+                     Basil.Database.Relational.Entities
+                     Basil.Database.Relational.Operations
+                     Basil.Database.Relational.Relationships
+                     Basil.InMemory.Cache
+                     Basil.InMemory.Interface
+                     Basil.InMemory.Relations
+                     Basil.InMemory.Relations.Storage
+                     Basil.References
+                     Basil.Relations
+                     Basil.Relations.InitialValues
+
 build-depends:       base >= 3 && < 5,
                      containers >= 0.2,
                      fclabels >= 0.4.2,

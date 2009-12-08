@@ -1,3 +1,9 @@
+%if False
+
+> module Basil.Database.Relational.Relationships where
+
+%endif
+
 We can convert relationships in the same way as we converted entities. A
 relationship set is converted to a table with two columns, one column for each
 entity set involved in the relationship set. Consider the many-to-many

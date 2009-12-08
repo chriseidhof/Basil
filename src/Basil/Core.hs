@@ -1,12 +1,8 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE EmptyDataDecls        #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE Rank2Types   #-}
-{-# LANGUAGE FlexibleContexts   #-}
 
 module Basil.Core where
 
