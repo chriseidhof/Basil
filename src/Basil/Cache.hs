@@ -16,16 +16,11 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 type Cache phi env = TList TypeCache phi env
-data TypeCache a = TypeCache {_cached :: M.Map Ident a, _tainted :: S.Set Ident} deriving Show
+data TypeCache a = TypeCache {_cached :: M.Map Ident a} deriving Show
 
 emptyState :: Witnesses phi env -> Cache phi env
 emptyState WNil       = ()
-emptyState (WCons xs) = (TypeCache M.empty S.empty, emptyState xs)
+emptyState (WCons xs) = (TypeCache M.empty, emptyState xs)
 
 
 $(mkLabels [''TypeCache])
-
-class (Functor (p phi), Monad (p phi), Fam phi) => Persist (p :: (* -> *) -> * -> *) (phi :: * -> *) where
-  pFetch :: phi ix -> Int -> p phi (Maybe ix)
-  -- pSave  :: Regular a => TRef f a fam -> Int -> a -> p fam ()
-  -- pFetchHasMany :: (Regular a, Regular b) => TRef TypeCache b fam -> NamedLabel a (Many b) -> Int -> p fam [(Int, b)]

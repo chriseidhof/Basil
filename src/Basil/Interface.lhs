@@ -57,7 +57,7 @@ Creating a new entitiy is a bit more involved. This is where our library shines:
 >      ->  PList phi ix (InitialValues phi ix rels rels) rels 
 >      ->  Basil phi env rels (Ref phi ix)
 
-First, we will get a fresh integer that can be used for creating a reference. We then store the entity, and finally, the relationships. The |addRelTainted| can safely be ignored for now, but will be used when saving the in-memory database to a relational database in section \ref{sec:rdb}.
+First, we will get a fresh integer that can be used for creating a reference. We then store the entity, and finally, the relationships. 
 
 > new i rels = do  let tix = proof
 >                  freshId <- getM freshVariable
@@ -65,8 +65,7 @@ First, we will get a fresh integer that can be used for creating a reference. We
 >                  let  ident          = Fresh freshId
 >                       ref            = Ref tix ident
 >                  let  saveData       = mod  cached   (M.insert ident i)
->                       addRelTainted  = mod  tainted  (S.insert ident)
->                  modM cache    (modTList (saveData . addRelTainted) (index tix))
+>                  modM cache    (modTList (saveData) (index tix))
 >                  modM relCache (storeAll ref rels)
 >                  return ref
 

@@ -77,24 +77,6 @@ example = do chris    <- new (exampleUser "chris") ((parent (Ref User (UID 999))
 -- to run
 runIt = runBasil $ example
 
-
--- Logger code
-
-instance Monad (Logger Blog) where
-  return x = Log (return x)
-  (>>=) l r = Log (runLog l >>= (fmap runLog r))
-
-newtype Logger (phi :: * -> *) a = Log {runLog :: IO a}
-
-instance Functor (Logger Blog) where fmap f = Log . fmap f . runLog
-
-log :: Show a => a -> Logger phi ()
-log = Log . print
-
-instance Persist Logger Blog where
-  pFetch tix ix = do log ix
-                     return Nothing
-
 -- Boilerplate code (will be TH eventually)
 
 instance EnumTypes Blog BlogEnum where
