@@ -3,6 +3,8 @@
 module CoreData2 where
 
 import Basil
+import Basil.Relations.PList
+import Basil.Query
 import Data.Record.Label (mkLabels, label)
 import Generics.MultiRec.Base hiding (Tag)
 import Generics.MultiRec.TH
@@ -61,16 +63,19 @@ children x = (x, DL,  Suc (Suc (Suc Zero)))
 
 authorP x = (x, DR, Zero)
 
+age_ = Attribute "age" age
+
 -- example flow
 --
 
-example :: Basil Blog BlogEnum BlogRelationsEnum String
+example :: Basil Blog BlogEnum BlogRelationsEnum [(Ref Blog User, User)]
 example = do chris    <- new (exampleUser "chris") ((parent (Ref User (UID 999))) `PCons` (PNil))
              piet     <- new (exampleUser "piet") ((parent chris) `PCons` (PNil))
              post     <- new examplePost (PCons (authorP chris) PNil)
              --auth     <- getRelation post (DR, Zero)
-             name     <- attr chris lName
-             return name
+             age      <- attr chris lAge
+             drinking <- query (Not (age_ .<. Constant 18))
+             return drinking
 
 -- to run
 runIt = runBasil $ example

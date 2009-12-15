@@ -6,11 +6,13 @@
 > {-# LANGUAGE TypeOperators   #-}
 > {-# LANGUAGE GADTs   #-}
 > {-# LANGUAGE UndecidableInstances   #-}
-> module Basil.InMemory.Interface (runBasil, find, new, attr, {- getRelation, setRelation, -} Basil (), BasilState) where
+> module Basil.InMemory.Interface (runBasil, find, new, query, attr, {- getRelation, setRelation, -} Basil (), BasilState) where
 > 
 > import Basil.Core
+> import Basil.Query
 > import Basil.InMemory.Cache
 > import Basil.Relations
+> import Basil.Relations.PList
 > import Basil.References
 > import Basil.Data.TBoolean
 > import Basil.Data.TList (TIndex, modTList, lookupTList, EnumTypes, Witnesses, index, allTypes)
@@ -20,10 +22,13 @@
 > import qualified Control.Monad.State as ST
 > import qualified Data.Map as M
 > import qualified Data.Set as S
+> import qualified Basil.Interface as P
 > import Data.Record.Label hiding (set)
 > import Prelude hiding (mod)
 
 %endif
+
+%if not query
 
 We will now combine the storage of relations and the storage of entities to build the actual in-memory database. For convenience, we introduce a |BasilState| datatype that also stores an |Int| value that is a fresh-variable supply for creating new entities.
 
@@ -85,12 +90,30 @@ Finally, we can provide a |runBasil| method that executes an in-memory database 
 >                                                0
 >                                   )
 
-TODO: query relationships.
+We now have achieved the goals stated in the introduction of this section: we can store and find both entities and relationships, while maintaining the soundness of the relationship sets.
 
-We now have achieved the goals stated in the introduction of this section: we can store and query both entities and relationships, while maintaining the soundness of the relationship sets.
+%endif
+
+%if query
+
+Querying the database is comparable to |find|, it looks up the map with entities, filters the map by |cond| and finally converts it into a list.
+
+> query :: (El phi entity) => (Expr entity Bool) -> Basil phi env rels [(Ref phi entity, entity)]
+> query cond  =  let  tix   = proof
+>                     look  = mapFst (Ref tix) 
+>                           . M.toList 
+>                           . M.filter (eval cond) 
+>                           . get cached . lookupTList (index tix) 
+>                in look <$> getM cache
+
+%endif
 
 
 %if False
+
+> mapFst f = map (\(x,y) -> (f x, y))
+
+An instance for the |Persistent| typeclass:
 
 > attr :: (El phi entity) => Ref phi entity -> (entity :-> att) -> Basil phi env rels att
 > attr r@(Ref tix entity) at = do val <- find r
