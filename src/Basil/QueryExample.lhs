@@ -27,3 +27,9 @@ And we can also combine expressions:
 > isChris :: Expr Person Bool
 > isChris  =     Not (belowDrinkingAge) 
 >          .&&.  name_ .==. Constant "chris"
+
+Evaluating |toSql isChris| yields the following SQL expression:
+
+\begin{spec}
+"(NOT (age < 18)) AND (name == \"chris\")"
+\end{spec}

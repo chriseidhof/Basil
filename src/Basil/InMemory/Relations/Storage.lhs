@@ -26,9 +26,8 @@ We only consider relationships between two entities with a cardinality of
 one-to-one, one-to-many, many-to-one or many-to-many. Relationships are grouped
 into relationship sets, where all relationships are between the same entity
 types and have the same cardinality. Based on the cardinality, we can choose a
-datatype to store the relationships. We have highlighted the |One| and |Many|
-types in this module because they play an important role.
-
+datatype to store the relationships. Because |One| and |Many| play an important
+role in this section, they are highlighted.
 
 > type  family     RelationStorage rel :: *
 > type  instance   RelationStorage (Rel phi  One  r1  One   r2)  = 
@@ -130,9 +129,9 @@ function and wraps it again:
 > withRelationStorageN f = RelationStorageN . f . unRelationStorageN
 
 Another essential operation is |lookup|. Given a reference to an entity and a
-relationship set, we want to find all matching relationships. In a one-to-one
-relationship set this will be exactly one relationship. In a one-to-many it will
-be a list of refences. Before we define |lookup|, we will express its return type using 
+relationship set, we want to find all matching entities. In a one-to-one
+relationship set this will be exactly one entity. In a one-to-many relationship it will
+be a list of references. Before we define |lookup|, we will express its return type using 
 the |Value| type-family:
 
 > type family Value (phi :: * -> *) cardinality typ :: *

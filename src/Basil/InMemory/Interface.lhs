@@ -96,14 +96,14 @@ We now have achieved the goals stated in the introduction of this section: we ca
 
 %if query
 
-Querying the database is comparable to |find|, it looks up the map with entities, filters the map by |cond| and finally converts it into a list.
+Querying the database is comparable to |find|, defined in section \ref{sec:inmeminterface}. The function |query| looks up the map with entities, filters the map by |cond| and finally converts it into a list. The function |eval| is used to compile the |Expr| value into a Haskell function with type |entity -> Bool|.
 
 > query :: (El phi entity) => (Expr entity Bool) -> Basil phi env rels [(Ref phi entity, entity)]
-> query cond  =  let  tix   = proof
->                     look  = mapFst (Ref tix) 
->                           . M.toList 
->                           . M.filter (eval cond) 
->                           . get cached . lookupTList (index tix) 
+> query cond  =  let  tix   =  proof
+>                     look  =  mapFst (Ref tix) 
+>                           .  M.toList 
+>                           .  M.filter (eval cond) 
+>                           .  get cached . lookupTList (index tix) 
 >                in look <$> getM cache
 
 %endif
