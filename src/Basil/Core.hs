@@ -3,13 +3,13 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE EmptyDataDecls        #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeOperators          #-}
 
 module Basil.Core where
 
 import Basil.Data.TList4
 import Basil.Data.TBoolean
 import Basil.Data.TList
-import Generics.MultiRec.Base hiding (index)
 
 data One
 data Many
@@ -18,20 +18,17 @@ data Cardinality a where
   One  :: Cardinality One
   Many :: Cardinality Many
 
-class Fam phi => ERModel (phi :: * -> *) rels | phi -> rels, rels -> phi where
-  relations :: TList4 Rel phi rels
+class ERModel entities rels | entities -> rels, rels -> entities where
+  relations :: TList4 Rel entities rels
 
-relationsForType :: (ERModel phi xs, TEq phi) => phi x -> TList4 Rel phi (Filter4IfTypeEq x xs)
-relationsForType ix = filterByType ix relations
-
-data Rel phi cardinalityL cardinalityR l r where
+data Rel entities cardinalityL cardinalityR l r where
   Rel  :: Cardinality cardinalityL 
        -> phi l
        -> String
        -> Cardinality cardinalityR
-       -> phi r
+       -> entities r
        -> String
-       -> Rel phi cardinalityL l cardinalityR r
+       -> Rel entities cardinalityL l cardinalityR r
 
 mkRelation (nameL, cardL, entityTypeL) (nameR, cardR, entityTypeR) = Rel cardL entityTypeL nameL cardR entityTypeR nameR
 
