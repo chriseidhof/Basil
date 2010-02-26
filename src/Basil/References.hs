@@ -1,15 +1,12 @@
-{-# LANGUAGE GADTs, KindSignatures #-}
+{-# LANGUAGE GADTs, KindSignatures, ExistentialQuantification #-}
 module Basil.References where
 
-data Ref     (phi :: * -> *) (ix :: *) where
-  Ref { pr :: (phi ix), pKey :: Ident } ::  Ref phi ix
+import Data.HList
 
-data RefList (phi :: * -> *) (ix :: *) where
-  RLNil :: RefList phi ix
-  RLCons :: Ref phi ix -> RefList phi ix -> RefList phi ix
+data Ref entities entity = forall ixL . (HList entities, HLookupByHNat ixL entities entity) =>
+  Ref {x :: ixL, pKey :: Ident}
 
-instance Show (Ref phi ix) where
-  show x = "Ref "  ++ show (pKey x)
+type RefList phi ix = [Ref phi ix]
 
 instance Eq (Ref phi ix) where
   r1 == r2 = (pKey r1 == pKey r2)

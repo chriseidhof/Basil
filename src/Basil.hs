@@ -1,9 +1,9 @@
 module Basil (module Basil.Core, 
               module Basil.InMemory.Cache, 
               module Basil.Relations, 
-              module Basil.InMemory.Interface, 
+--              module Basil.InMemory.Interface, 
               module Basil.References,
-              module Basil.Data.TList,
+--              module Basil.Data.TList,
               module Basil.Data.TList4,
               module Basil.Data.TBoolean
               ) where
