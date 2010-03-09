@@ -1,111 +1,109 @@
 %if False 
 
-> {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types #-}
+> {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies , FlexibleInstances, UndecidableInstances #-}
+> {-# LANGUAGE FlexibleContexts #-}
+>
 > module Basil.InMemory.Relations.Storage where
 > 
-> import Basil.InMemory.Cache
+> import Basil.InMemory.EntityStorage
 > import Basil.Core
 > import Basil.References
-> import Basil.Data.TList
-> import Basil.Data.TList4
+> import Data.HList
 > import qualified Data.Map as M
 > import qualified Data.Set as S
 > import qualified Data.Maybe as Maybe
-> import qualified Debug.Trace as D
 
 
--- This is the base module where we define how to store relationships. 
--- 
--- %endif
--- %{
--- 
--- %format One  = "\mathbf{One}"
--- %format Many = "\mathbf{Many}"
--- 
--- We only consider relationships between two entities with a cardinality of
--- one-to-one, one-to-many, many-to-one or many-to-many. Relationships are grouped
--- into relationship sets, where all relationships are between the same entity
--- types and have the same cardinality. Based on the cardinality, we can choose a
--- datatype to store the relationships. Because |One| and |Many| play an important
--- role in this section, they are highlighted.
--- 
--- > type  family     RelationStorage rel :: *
--- > type  instance   RelationStorage (Rel phi  One  r1  One   r2)  = 
--- >                  M.Map   (Ref phi r1)  (Ref phi r2)
--- > type  instance   RelationStorage (Rel phi  One  r1  Many  r2)  = 
--- >                  M.Map   (Ref phi r2)  (Ref phi r1)
--- > type  instance   RelationStorage (Rel phi  Many r1  One   r2)  = 
--- >                  M.Map   (Ref phi r1)  (Ref phi r2)
--- > type  instance   RelationStorage (Rel phi  Many r1  Many  r2)  = 
--- >                  (  M.Map  (Ref phi r1  )  (S.Set (Ref phi r2))
--- >                  ,  M.Map  (Ref phi r2  )  (S.Set (Ref phi r1)))
--- 
--- \label{tfun:RelationStorage}
--- 
--- 
--- For an ER model, we enumerate all the relationship sets on the type-level using
--- nested pairs that are growing to the right. We can reuse our |TList| datatype
--- for storing all relationship sets |rels| in an ER model |phi|.
--- 
--- > type RelCache phi rels = TList RelationStorageN phi rels
--- 
--- |RelationStorageN| is a newtype wrapping |RelationStorage| because Haskell does
--- not support partially applied type families:
--- 
--- > newtype RelationStorageN a = RelationStorageN { unRelationStorageN :: RelationStorage a}
--- >
--- 
--- 
--- Given a relationship set, we can create an empty datastructure for it. We will
--- add the suffix |S| to a function to indicate that we are dealing with functions
--- for just one relationship set. Functions on all relationship
--- sets in an ER model will not have this suffix.
--- 
--- > emptyS :: Rel phi c1 r1 c2 r2 -> RelationStorage (Rel phi c1 r1 c2 r2)
--- > emptyS (Rel  One   _  _  One   _ _) = M.empty
--- > emptyS (Rel  One   _  _  Many  _ _) = M.empty
--- > emptyS (Rel  Many  _  _  One   _ _) = M.empty
--- > emptyS (Rel  Many  _  _  Many  _ _) = (M.empty, M.empty)
--- 
--- %if False
--- 
--- We can map over the list of all relationship sets |rels| to create an empty
--- datastructure for each relationship set in the ER model. We give its type, but
--- omit its definition. The |TList4| data structure is explained in section
--- \ref{sec:tlist4}
--- 
--- > empty :: TList4 Rel phi rels -> RelCache phi rels
--- > empty relations = fromTList4 (RelationStorageN . emptyS) relations
--- 
--- 
--- The |fromTList4| function is much like |map|, it lifts an |f| into a |g| structure
--- that is indexed by that |f|:
--- 
--- > fromTList4  ::  (forall a b c d . f phi a b c d -> g (f phi a b c d)) 
--- >             ->  TList4 f phi rels 
--- >             ->  TList g phi rels
--- > fromTList4 f TNil4                = ()
--- > fromTList4 f (TCons4 _ _ rel xs)  = (f rel, fromTList4 f xs)
--- 
--- %endif
--- 
--- Given two references and a relationship set we can insert the relationship into
--- the |RelationStorage| for that specific relationshipset . By pattern-matching on
--- the cardinality inside the |Rel| datatype we provide the compiler with enough
--- information to discover the type of the data-structure for that cardinality.
--- 
--- > insertS  ::  Ref phi l 
--- >          ->  Ref phi r 
--- >          ->  Rel phi c1 l c2 r 
--- >          ->  RelationStorage (Rel phi c1 l c2 r) 
--- >          ->  RelationStorage (Rel phi c1 l c2 r)
--- > insertS l r (Rel  One   _  _  One   _  _) s        =  M.insert l r s
--- > insertS l r (Rel  One   _  _  Many  _  _) s        =  M.insert r l s
--- > insertS l r (Rel  Many  _  _  One   _  _) s        =  M.insert l r s
--- > insertS l r (Rel  Many  _  _  Many  _  _) (s1,s2)  =  
--- >     (  M.alter (Just . maybe (S.singleton r)  (S.insert r))  l s1
--- >     ,  M.alter (Just . maybe (S.singleton l)  (S.insert l))  r s2
--- >     )
+This is the base module where we define how to store relationships. 
+
+%endif
+%{
+
+%format One  = "\mathbf{One}"
+%format Many = "\mathbf{Many}"
+
+We only consider relationships between two entities with a cardinality of
+one-to-one, one-to-many, many-to-one or many-to-many. Relationships are grouped
+into relationship sets, where all relationships are between the same entity
+types and have the same cardinality. Based on the cardinality, we can choose a
+datatype to store the relationships. Because |One| and |Many| play an important
+role in this section, they are highlighted.
+
+> class RelationStorage es c1 c2 t1 t2 store | es c1 c2 t1 t2 -> store where
+>   emptyRelationStorage :: Rel es c1 c2 t1 t2 -> store
+>   insertRelation :: Ref es t1 -> Ref es t2 -> store -> store
+
+> instance RelationStorage es One One r1 r2
+>                          (M.Map (Ref es r1) (Ref es r2)) 
+>   where emptyRelationStorage _ = M.empty
+>         insertRelation l r s   = M.insert l r s
+
+> -- insertS l r (Rel  One   _  _  Many  _  _) s        =  M.insert r l s
+> -- insertS l r (Rel  Many  _  _  One   _  _) s        =  M.insert l r s
+> -- insertS l r (Rel  Many  _  _  Many  _  _) (s1,s2)  =  
+
+> instance RelationStorage es One Many r1 r2
+>                          (M.Map (Ref es r2) (Ref es r1)) 
+>   where emptyRelationStorage _ = M.empty
+>         insertRelation l r s   = M.insert r l s
+
+> instance RelationStorage es Many One r1 r2
+>                          (M.Map (Ref es r1) (Ref es r2)) 
+>   where emptyRelationStorage _ = M.empty
+>         insertRelation l r s   = M.insert l r s
+
+> instance RelationStorage es Many Many r1 r2
+>                          (  M.Map  (Ref es r1  )  (S.Set (Ref es r2))
+>                          ,  M.Map  (Ref es r2  )  (S.Set (Ref es r1)))
+>   where emptyRelationStorage _     = (M.empty, M.empty)
+>         insertRelation l r (s1,s2) = (  M.alter (Just . maybe (S.singleton r)  (S.insert r))  l s1
+>                                      ,  M.alter (Just . maybe (S.singleton l)  (S.insert l))  r s2
+>                                      )
+
+Type-level HMap
+
+> data MkRelationStorage = MkRelationStorage
+
+> instance (RelationStorage es c1 c2 t1 t2 store) => Apply MkRelationStorage (Rel es c1 c2 t1 t2) store where
+>   apply MkRelationStorage x = emptyRelationStorage x
+
+> class HMap MkRelationStorage relations storage => RelationsStorage relations storage where
+>   relationsStorage :: relations -> storage
+
+
+> instance ( ERModel entities relations
+>          , HMap MkRelationStorage relations storage)
+>          => RelationsStorage relations storage where
+>   relationsStorage = hMap MkRelationStorage 
+
+> class HMappedLookupByHNat ix ls res | ix ls -> res where
+>  hMappedLookupByHNat :: ix -> ls -> res
+
+> instance (HLookupByHNat ix ls src, HMap f ls ls', Apply f src res) => HMappedLookupByHNat ix ls' res where
+>  hMappedLookupByHNat = undefined
+
+Given two references and a relationship set we can insert the relationship into
+the |RelationStorage| for that specific relationshipset . By pattern-matching on
+the cardinality inside the |Rel| datatype we provide the compiler with enough
+information to discover the type of the data-structure for that cardinality.
+
+> insert :: ( RelationsStorage relations storage
+>           , HLookupByHNat ix relations (Rel es c1 c2 l r)
+>           , Apply MkRelationStorage (Rel es c1 c2 l r) store
+>           )
+>         => Ref entities l
+>         -> Ref entities r
+>         -> ix
+>         -> storage -> storage
+> insert l r ix s = let x = hMappedLookupByHNat ix s
+>                   in hMappedUpdateAtHNat ix x s
+
+> -- insertS  ::  Ref phi l 
+> --          ->  Ref phi r 
+> --          ->  Rel phi c1 l c2 r 
+> --          ->  RelationStorage (Rel phi c1 l c2 r) 
+> --          ->  RelationStorage (Rel phi c1 l c2 r)
+
 -- 
 -- We can now lift that function to the storage of all relationship sets in a
 -- model:

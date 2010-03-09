@@ -29,10 +29,8 @@ exposed-modules:     Basil
                      Basil.References
                      Basil.Relations
                      Basil.Relations.InitialValues
-
 build-depends:       base >= 3 && < 5,
                      containers >= 0.2,
                      fclabels >= 0.4.2,
                      mtl,
                      multirec >= 0.4
-
