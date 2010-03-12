@@ -39,10 +39,10 @@ type BlogRelationsEnum =    ((One `To` Many) User Post)
                        :*:  Nil
 
 instance ERModel Blog BlogRelationsEnum where
-  relations = TCons4 ixUser    ixPost authorPosts 
-            $ TCons4 ixUser ixComment authorComments 
-            $ TCons4 ixPost ixComment postComments 
-            $ TCons4 ixUser    ixUser parentChildren
+  relations = TCons4 authorPosts 
+            $ TCons4 authorComments 
+            $ TCons4 postComments 
+            $ TCons4 parentChildren
             $ TNil4
 
 
@@ -69,9 +69,9 @@ age_ = Attribute "age" age
 --
 
 example :: Basil Blog BlogRelationsEnum [(Ref Blog User, User)]
-example = do chris    <- new ixUser (exampleUser "chris") ((parent (Ref ixUser (UID 999))) `PCons` (PNil))
-             piet     <- new ixUser (exampleUser "piet") ((parent chris) `PCons` (PNil))
-             post     <- new ixPost examplePost (PCons (authorP chris) PNil)
+example = do chris    <- new ixUser (exampleUser "chris") undefined -- ((parent (Ref ixUser (UID 999))) `PCons` (PNil))
+             piet     <- new ixUser (exampleUser "piet") undefined -- ((parent chris) `PCons` (PNil))
+             post     <- new ixPost examplePost undefined -- (PCons (authorP chris) PNil)
              --auth     <- getRelation post (DR, Zero)
              age      <- attr chris lAge
              drinking <- query ixUser (Not (age_ .<. Constant 18))
@@ -80,18 +80,27 @@ example = do chris    <- new ixUser (exampleUser "chris") ((parent (Ref ixUser (
 -- to run
 runIt = runBasil $ example
 
--- Boilerplate code (will be TH eventually)
-
--- instance EnumTypes Blog BlogEnum where
---   allTypes      = WCons (WCons (WCons (WCons WNil)))
---   index User    = Zero
---   index Post    = Suc Zero
---   index Comment = Suc (Suc Zero)
---   index Tag     = Suc (Suc (Suc Zero))
-
 -- testing
 test = X.setValue (Ref ixUser (Fresh 1)) ((Ref ixPost (Fresh 2)), DL, Zero)
      $ test'
 test' = 
        X.setValue (Ref ixUser (Fresh 1)) ((Ref ixPost (Fresh 3)), DL, Zero)
      $ B.empty (relations :: TList4 Rel BlogRelationsEnum)
+
+-- boilerplate
+type instance TypeEq User     User    = True 
+type instance TypeEq User     Post    = False
+type instance TypeEq User     Comment = False
+type instance TypeEq User     Tag     = False
+type instance TypeEq Post     User    = False
+type instance TypeEq Post     Post    = True 
+type instance TypeEq Post     Comment = False
+type instance TypeEq Post     Tag     = False
+type instance TypeEq Comment  User    = False
+type instance TypeEq Comment  Post    = False
+type instance TypeEq Comment  Comment = True 
+type instance TypeEq Comment  Tag     = False
+type instance TypeEq Tag      User    = False
+type instance TypeEq Tag      Post    = False
+type instance TypeEq Tag      Comment = False
+type instance TypeEq Tag      Tag     = True

@@ -85,7 +85,7 @@ that is indexed by that |f|:
 >             ->  TList4 f rels 
 >             ->  HList (TMap g rels)
 > fromTList4 f TNil4                = Nil
-> fromTList4 f (TCons4 _ _ rel xs)  = f rel .*. fromTList4 f xs
+> fromTList4 f (TCons4 rel xs)  = f rel .*. fromTList4 f xs
 
 %endif
 
