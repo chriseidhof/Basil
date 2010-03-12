@@ -1,6 +1,7 @@
 %if False
 
-> {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types, GADTs, EmptyDataDecls #-}
+> {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types, GADTs, EmptyDataDecls ,
+>              TypeOperators #-}
 > module Basil.Relations.InitialValues where
 >
 > import Basil.Core
@@ -61,31 +62,31 @@ create pointers into the original list of all relationship sets.
 
 The base case is the empty list of relationship sets:
 
-> type instance InitialValues phi r ()  o = ()
+> type instance InitialValues phi r Nil  o = Nil
 
 When we find a to-many relationship we will call |InitialValues'| to see if the other
 direction of the relationship matches.
 
-> type instance InitialValues phi r (Rel phi c1 from Many to, xs) o = 
->   InitialValues' phi r (Rel phi c1 from Many to, xs) o
+> type instance InitialValues phi r (Rel phi c1 from Many to :*: xs) o = 
+>   InitialValues' phi r (Rel phi c1 from Many to :*: xs) o
 
 However, when we find a to-one relationship we will include it in our |InitialValues| if 
 the types |r| and |from| are equal, using the type-level functions |AppendIfTrue| and  |TypeEq|.
 We will also encode the direction |L| in which it was found.
 
-> type instance InitialValues phi r (Rel phi c1 from One  to, xs) o = 
+> type instance InitialValues phi r (Rel phi c1 from One  to :*: xs) o = 
 >   AppendIfTrue  (TypeEq r from) 
 >                 (InitialValue    phi r L (Rel phi c1 from One to) o) 
->                 (InitialValues'  phi r   (Rel phi c1 from One to, xs) o)
+>                 (InitialValues'  phi r   (Rel phi c1 from One to :*: xs) o)
 
 The |InitialValues'| function is very similar, it looks for |r| in a different direction by comparing it with |to| instead of |from|:
 
-> type instance InitialValues' phi r (Rel phi One from c1  to, xs) o = 
+> type instance InitialValues' phi r (Rel phi One from c1  to :*: xs) o = 
 >   AppendIfTrue  (TypeEq r to)  
 >                 (InitialValue phi r R (Rel phi One from c1 to) o) 
 >                 (InitialValues phi r xs o)
 > 
-> type instance InitialValues' phi r (Rel phi Many from c1 to, xs) o = 
+> type instance InitialValues' phi r (Rel phi Many from c1 to :*: xs) o = 
 >   InitialValues phi r xs o
 
 An |InitialValue| for a relationship contains a reference to the target entity,

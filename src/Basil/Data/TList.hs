@@ -84,7 +84,7 @@ tMap f (Cons x xs) = Cons (f x) (tMap f xs)
 -- type instance FilterIfTypeEq' x (f y z, ys) = AppendIfTrue (TypeEq x z) (f y z) (FilterIfTypeEq x ys)
 -- 
 type family   AppendIfTrue bool x xs :: *
-type instance AppendIfTrue True x xs  = (x, xs)
+type instance AppendIfTrue True x xs  = x :*: xs
 type instance AppendIfTrue False x xs = xs
 -- 
 -- -- TODO: following should be in a separate module.

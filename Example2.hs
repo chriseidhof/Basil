@@ -58,6 +58,7 @@ exampleUser  n = UserC    n "test" 24
 examplePost    = PostC    "fipo" "my first post"
 exampleComment = CommentC "a comment!"
 
+parent :: Ref Blog User -> InitialValue Blog User R ((One `To` Many) User User) BlogRelationsEnum
 parent   x = (x, DR,  Suc (Suc (Suc Zero)))
 children x = (x, DL,  Suc (Suc (Suc Zero)))
 
@@ -69,9 +70,9 @@ age_ = Attribute "age" age
 --
 
 example :: Basil Blog BlogRelationsEnum [(Ref Blog User, User)]
-example = do chris    <- new ixUser (exampleUser "chris") undefined -- ((parent (Ref ixUser (UID 999))) `PCons` (PNil))
-             piet     <- new ixUser (exampleUser "piet") undefined -- ((parent chris) `PCons` (PNil))
-             post     <- new ixPost examplePost undefined -- (PCons (authorP chris) PNil)
+example = do chris    <- new ixUser (exampleUser "chris") ((parent (Ref ixUser (UID 999))) `PCons` (PNil))
+             piet     <- new ixUser (exampleUser "piet") ((parent chris) `PCons` (PNil))
+             post     <- new ixPost examplePost (PCons (authorP chris) PNil)
              --auth     <- getRelation post (DR, Zero)
              age      <- attr chris lAge
              drinking <- query ixUser (Not (age_ .<. Constant 18))
