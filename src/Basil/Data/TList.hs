@@ -31,9 +31,9 @@ type family   TMap (f :: * -> *) phi :: *
 type instance TMap f Nil       = Nil
 type instance TMap f (a :*: b) = f a :*: TMap f b
 
-data Witnesses phi where
-  WNil  :: Witnesses Nil
-  WCons :: Ix ix env -> Witnesses env -> Witnesses (ix :*: env)
+data Witnesses phi env where
+  WNil  :: Witnesses phi Nil
+  WCons :: Ix phi ix -> Witnesses phi env -> Witnesses phi (ix :*: env)
 
 lookupTList :: Ix phi ix -> HList phi -> ix
 lookupTList Zero     (Cons y ys) = y

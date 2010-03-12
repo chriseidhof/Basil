@@ -44,6 +44,7 @@ instance ERModel Blog BlogRelationsEnum where
             $ TCons4 postComments 
             $ TCons4 parentChildren
             $ TNil4
+  witnesses = WCons Zero (WCons (Suc Zero) (WCons (Suc (Suc Zero)) (WCons (Suc (Suc (Suc Zero))) WNil)))
 
 
 authorPosts    = mkRelation ("author", One, ixUser)   ("posts"   , Many, ixPost)

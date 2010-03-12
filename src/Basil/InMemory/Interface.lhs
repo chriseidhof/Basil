@@ -85,7 +85,7 @@ Finally, we can provide a |runBasil| method that executes an in-memory database 
 > runBasil  ::  forall phi rels a . ERModel phi rels
 >           =>  Basil phi rels a 
 >           ->  (a, BasilState phi rels)
-> runBasil comp = ST.runState comp  (BasilState  (emptyState (undefined :: Witnesses phi)) 
+> runBasil comp = ST.runState comp  (BasilState  (emptyState (witnesses :: Witnesses phi phi)) 
 >                                                (empty (relations :: TList4 Rel rels))
 >                                                0
 >                                   )

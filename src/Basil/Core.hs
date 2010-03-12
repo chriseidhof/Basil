@@ -20,6 +20,7 @@ data Cardinality a where
 
 class ERModel phi rels | phi -> rels, rels -> phi where
   relations :: TList4 Rel rels
+  witnesses :: Witnesses phi phi
 
 -- relationsForType :: (ERModel phi xs, TEq phi) => phi x -> TList4 Rel phi (Filter4IfTypeEq x xs)
 -- relationsForType ix = filterByType ix relations

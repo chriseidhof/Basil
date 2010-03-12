@@ -19,7 +19,7 @@ data TypeCache a = TypeCache {_cached :: M.Map Ident a} deriving Show
 
 type Cache phi = HList (TMap TypeCache phi)
 
-emptyState :: Witnesses phi -> Cache phi
+emptyState :: Witnesses phi env -> Cache env
 emptyState WNil         = Nil
 emptyState (WCons _ xs) = TypeCache M.empty .*. emptyState xs
 
