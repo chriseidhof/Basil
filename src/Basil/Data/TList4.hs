@@ -16,9 +16,9 @@ import Basil.Data.TList
   --
 
 
--- data TList4 (f :: * -> * -> * -> * -> * -> *) (phi :: *) a where
---   TNil4 :: TList4 f phi Nil
---   TCons4 :: Ix phi x -> Ix phi y -> f phi m1 x m2 y -> TList4 f phi xs -> TList4 f phi (f phi m1 x m2 y :*: xs)
+data TList4 (f :: * -> * -> * -> * -> * -> *) a where
+   TNil4  :: TList4 f Nil
+   TCons4 :: Ix phi x -> Ix phi y -> f phi m1 x m2 y -> TList4 f xs -> TList4 f (f phi m1 x m2 y :*: xs)
 -- 
 -- type family   Filter4IfTypeEq x xs :: *
 -- type instance Filter4IfTypeEq x () = ()
@@ -28,9 +28,10 @@ import Basil.Data.TList
 -- type instance Filter4IfTypeEq' x () = ()
 -- type instance Filter4IfTypeEq' x (f y c1 z, ys) = AppendIfTrue (TypeEq x z) (f y c1 z) (Filter4IfTypeEq x ys)
 -- 
--- lookupTList4 :: Ix phi ix -> TList4 f phi env -> ix
--- lookupTList4 Zero    (TCons4 _ _ x xs) = x
--- lookupTList4 (Suc x) (TCons4 _ _ y ys) = lookupTList4 x ys
+
+lookupTList4 :: Ix rels rel -> TList4 f rels -> rel
+lookupTList4 Zero    (TCons4 _ _ x xs) = x
+lookupTList4 (Suc x) (TCons4 _ _ y ys) = lookupTList4 x ys
 -- 
 -- -- Find relations in both ways (TODO: explain a bit more)
 -- filterByType :: TEq phi => phi x -> TList4 f phi xs -> TList4 f phi (Filter4IfTypeEq x xs)

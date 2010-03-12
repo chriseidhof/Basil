@@ -15,7 +15,8 @@
 > import Basil.Relations.PList
 > import Basil.References
 > import Basil.Data.TBoolean
-> import Basil.Data.TList (Ix, modTList, lookupTList, Witnesses)
+> import Basil.Data.TList (Ix, modTList, lookupTList, lookupMapTList, Witnesses)
+> import Basil.Data.TList4
 > import Control.Applicative hiding (empty)
 > import Generics.MultiRec.Base hiding (index)
 > import qualified Control.Monad.State as ST
@@ -33,8 +34,8 @@ We will now combine the storage of relations and the storage of entities to buil
 
 > data BasilState phi rels where
 >   BasilState :: ERModel phi rels
->              => Cache phi env 
->              -> RelCache phi rels
+>              => Cache phi 
+>              -> RelCache rels
 >              -> Int 
 >              -> BasilState phi rels
 
@@ -45,35 +46,35 @@ We introduce a type synonym |Basil| that is a state monad with |BasilState| as i
 
 %if False
 
-> instance (Show (RelCache phi rels), Show (Cache phi env)) => Show (BasilState phi env rels) where
+> instance (Show (RelCache rels), Show (Cache phi )) => Show (BasilState phi rels) where
 >   show (BasilState x y z) = "BasilState {" ++ unwords [show x, show y, show z] ++ "}"
 
 %endif
 
 We can now define a |find| method that searches the state for the entity of type |entity|, given a reference to it.
 
-> find :: (El phi entity) => Ref phi entity -> Basil phi env rels (Maybe entity)
-> find (Ref tix entity)  =    M.lookup entity . get cached . lookupTList tix
+> find :: Ref phi entity -> Basil phi rels (Maybe entity)
+> find (Ref tix entity)  =    M.lookup entity . get cached . lookupMapTList tix
 >                        <$>  getM cache
 
 Creating a new entitiy is a bit more involved. This is where our library shines: we not only ask for a value of |entity|, but also ask for all its |InitialValues| (see section \ref{sec:initialvalues}). This way, we make sure that all the right relationships are added.
 
-> new  ::  (El phi entity) 
->      =>  entity 
+> new  ::  Ix phi entity
+>      ->  entity 
 >      ->  PList phi entity (InitialValues phi entity rels rels) rels 
->      ->  Basil phi env rels (Ref phi entity)
+>      ->  Basil phi rels (Ref phi entity)
 
 First, we will get a fresh integer that can be used for creating a reference. We then store the entity, and finally, the relationships. 
 
-> new i rels = do  let tix = proof
->                  freshId <- getM freshVariable
->                  modM freshVariable (+1)
->                  let  ident          = Fresh freshId
->                       ref            = Ref tix ident
->                  let  saveData       = mod  cached   (M.insert ident i)
->                  modM cache    (modTList (saveData) tix)
->                  modM relCache (storeAll ref rels)
->                  return ref
+> new tix i rels = do 
+>   freshId <- getM freshVariable
+>   modM freshVariable (+1)
+>   let  ident          = Fresh freshId
+>        ref            = Ref tix ident
+>   let  saveData       = mod  cached   (M.insert ident i)
+>   modM cache    (modTList (saveData) tix)
+>   modM relCache (storeAll ref rels)
+>   return ref
 
 
 
@@ -85,7 +86,7 @@ Finally, we can provide a |runBasil| method that executes an in-memory database 
 >           =>  Basil phi rels a 
 >           ->  (a, BasilState phi rels)
 > runBasil comp = ST.runState comp  (BasilState  (emptyState (undefined :: Witnesses phi)) 
->                                                (empty (relations :: TList4 Rel phi rels))
+>                                                (empty (relations :: TList4 Rel rels))
 >                                                0
 >                                   )
 
@@ -97,13 +98,12 @@ We now have achieved the goals stated in the introduction of this section: we ca
 
 Querying the database is comparable to |find|, defined in section \ref{sec:inmeminterface}. The function |query| looks up the map with entities, filters the map by |cond| and finally converts it into a list. The function |eval| is used to compile the |Expr| value into a Haskell function with type |entity -> Bool|.
 
-> query :: (El phi entity) => (Expr entity Bool) -> Basil phi env rels [(Ref phi entity, entity)]
-> query cond  =  let  tix   =  proof
->                     look  =  mapFst (Ref tix) 
->                           .  M.toList 
->                           .  M.filter (eval cond) 
->                           .  get cached . lookupTList (index tix) 
->                in look <$> getM cache
+> query :: Ix phi entity -> Expr entity Bool -> Basil phi rels [(Ref phi entity, entity)]
+> query tix cond  =  let look  =  mapFst (Ref tix) 
+>                              .  M.toList 
+>                              .  M.filter (eval cond) 
+>                              .  get cached . lookupMapTList tix
+>                     in look <$> getM cache
 
 %endif
 
@@ -114,7 +114,7 @@ Querying the database is comparable to |find|, defined in section \ref{sec:inmem
 
 An instance for the |Persistent| typeclass:
 
-> attr :: (El phi entity) => Ref phi entity -> (entity :-> att) -> Basil phi env rels att
+> attr :: Ref phi entity -> (entity :-> att) -> Basil phi rels att
 > attr r@(Ref tix entity) at = do val <- find r
 >                                 case val of
 >                                      Just x  -> return $ get at x
@@ -136,17 +136,17 @@ An instance for the |Persistent| typeclass:
 > 
 > 
 > -- State helper functions
-> cache :: (EnumTypes phi env) => (BasilState phi rels :-> Cache phi env)
+> cache :: BasilState phi rels :-> Cache phi 
 > cache = label getCache setCache
->  where getCache :: (EnumTypes phi env) => BasilState phi rels -> Cache phi 
+>  where getCache :: BasilState phi rels -> Cache phi 
 >        getCache (BasilState x _ _) = x
->        setCache :: (EnumTypes phi env) => Cache phi -> BasilState phi rels -> BasilState phi rels
+>        setCache :: Cache phi -> BasilState phi rels -> BasilState phi rels
 >        setCache x (BasilState _ y z) = BasilState x y z
-> freshVariable ::(EnumTypes phi env) => BasilState phi rels :-> Int
+> freshVariable :: BasilState phi rels :-> Int
 > freshVariable = label get' set'
 >  where get' :: BasilState phi rels -> Int
 >        get' (BasilState _ _ x) = x
->        set' :: (EnumTypes phi env) => Int -> BasilState phi rels -> BasilState phi rels
+>        set' :: Int -> BasilState phi rels -> BasilState phi rels
 >        set' z (BasilState x y _) = BasilState x y z
 > 
 > relCache ::(ERModel phi rels) => BasilState phi rels :-> RelCache rels

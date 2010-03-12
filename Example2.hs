@@ -32,12 +32,11 @@ ixTag     = Suc (Suc (Suc Zero))
 
 $(mkLabels [''User, ''Post, ''Comment, ''Tag])
 
-type BlogRelationsEnum = ((One `To` Many) User Post
-                        ,((One `To` Many) User Comment
-                        ,((One `To` Many) Post Comment 
-                        ,((One `To` Many) User User
-                        ,()
-                        ))))
+type BlogRelationsEnum =    ((One `To` Many) User Post)
+                       :*:  ((One `To` Many) User Comment)
+                       :*:  ((One `To` Many) Post Comment)
+                       :*:  ((One `To` Many) User User)
+                       :*:  Nil
 
 instance ERModel Blog BlogRelationsEnum where
   relations = TCons4 ixUser    ixPost authorPosts 
@@ -70,12 +69,12 @@ age_ = Attribute "age" age
 --
 
 example :: Basil Blog BlogRelationsEnum [(Ref Blog User, User)]
-example = do chris    <- new (exampleUser "chris") ((parent (Ref ixUser (UID 999))) `PCons` (PNil))
-             piet     <- new (exampleUser "piet") ((parent chris) `PCons` (PNil))
-             post     <- new examplePost (PCons (authorP chris) PNil)
+example = do chris    <- new ixUser (exampleUser "chris") ((parent (Ref ixUser (UID 999))) `PCons` (PNil))
+             piet     <- new ixUser (exampleUser "piet") ((parent chris) `PCons` (PNil))
+             post     <- new ixPost examplePost (PCons (authorP chris) PNil)
              --auth     <- getRelation post (DR, Zero)
              age      <- attr chris lAge
-             drinking <- query (Not (age_ .<. Constant 18))
+             drinking <- query ixUser (Not (age_ .<. Constant 18))
              return drinking
 
 -- to run
@@ -95,4 +94,4 @@ test = X.setValue (Ref ixUser (Fresh 1)) ((Ref ixPost (Fresh 2)), DL, Zero)
      $ test'
 test' = 
        X.setValue (Ref ixUser (Fresh 1)) ((Ref ixPost (Fresh 3)), DL, Zero)
-     $ B.empty (relations :: TList4 Rel Blog BlogRelationsEnum)
+     $ B.empty (relations :: TList4 Rel BlogRelationsEnum)

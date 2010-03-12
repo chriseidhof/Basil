@@ -9,10 +9,15 @@ module Basil.Data.TList where
 
 import Basil.Data.TBoolean
 
+infixr 5 :*:
+
 data (:*:) a b
 data Nil
 
 (.*.) = Cons
+
+class El phi ix where
+  proof :: Ix phi ix
 
 data HList a where
   Nil  :: HList Nil

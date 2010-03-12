@@ -74,19 +74,18 @@ datastructure for each relationship set in the ER model. We give its type, but
 omit its definition. The |TList4| data structure is explained in section
 \ref{sec:tlist4}
 
-> empty :: HList rels -> RelCache rels
-> empty Nil = Nil
-> empty (Cons x xs) = Cons (RelationStorageN (emptyS x)) (empty xs)
+> empty :: TList4 Rel rels -> RelCache rels
+> empty = fromTList4 (RelationStorageN . emptyS)
 
 
 The |fromTList4| function is much like |map|, it lifts an |f| into a |g| structure
 that is indexed by that |f|:
 
-> -- fromTList4  ::  (forall a b c d . f phi a b c d -> g (f phi a b c d)) 
-> --             ->  TList4 f phi rels 
-> --             ->  TList g phi rels
-> -- fromTList4 f TNil4                = ()
-> -- fromTList4 f (TCons4 _ _ rel xs)  = (f rel, fromTList4 f xs)
+> fromTList4  ::  (forall a b c d phi . f phi a b c d -> g (f phi a b c d)) 
+>             ->  TList4 f rels 
+>             ->  HList (TMap g rels)
+> fromTList4 f TNil4                = Nil
+> fromTList4 f (TCons4 _ _ rel xs)  = f rel .*. fromTList4 f xs
 
 %endif
 
@@ -118,7 +117,7 @@ model:
 >         ->  RelCache rels
 >         ->  RelCache rels
 > insert ix l r =  modTList 
->                  ( withRelationStorageN (insertS l r (lookupTList ix relations)) )
+>                  ( withRelationStorageN (insertS l r (lookupTList4 ix relations)) )
 >                  ix
 
 The helper function |withRelationStorageN| unwraps the newtype, applies the
@@ -201,9 +200,9 @@ function |gLookup|, which does the heavy lifting:
 >          =>  (t -> ix -> RelationStorage ix -> c)
 >          ->  Ix rels ix
 >          ->  t
->          ->  TMap RelationStorageN rels
+>          ->  HList (TMap RelationStorageN rels)
 >          ->  c
-> gLookup lookupFunc ix r  =  lookupFunc r (lookupTList ix relations) 
+> gLookup lookupFunc ix r  =  lookupFunc r (lookupTList4 ix relations) 
 >                          .  unRelationStorageN 
 >                          .  lookupMapTList ix
 

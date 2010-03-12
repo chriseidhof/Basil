@@ -19,7 +19,7 @@ data Cardinality a where
   Many :: Cardinality Many
 
 class ERModel phi rels | phi -> rels, rels -> phi where
-  relations :: rels
+  relations :: TList4 Rel rels
 
 -- relationsForType :: (ERModel phi xs, TEq phi) => phi x -> TList4 Rel phi (Filter4IfTypeEq x xs)
 -- relationsForType ix = filterByType ix relations
