@@ -11,7 +11,6 @@ import Basil.Data.TList4
 import Basil.Data.TList
 import Basil.References
 import Data.Record.Label (mkLabels, label)
-import Generics.MultiRec.Base hiding (index)
 import qualified Data.Map as M
 import qualified Data.Set as S
 

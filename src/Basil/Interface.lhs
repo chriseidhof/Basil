@@ -12,7 +12,6 @@ A common interface for persistency layers
 > import Basil.Relations.PList
 > import Basil.Data.TList
 > import Basil.Data.TList4
-> import Generics.MultiRec.Base (El)
 
 %endif
 

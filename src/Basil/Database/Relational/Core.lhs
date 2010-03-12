@@ -27,10 +27,10 @@ A table schema is a list of attributes. We can reuse our |TList| datatype. The
 |db| type variable is similar to |phi| in the previous sections: it is a family
 with all the tables in our database.
 
-> type Schema db t = TList Attr db t
+> -- type Schema db t = TList Attr db t
 
 %include CoreExample.lhs
 
 A table is simply a schema with a name
 
-> type Table db t = (String, Schema db t)
+> -- type Table db t = (String, Schema db t)

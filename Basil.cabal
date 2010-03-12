@@ -33,6 +33,4 @@ exposed-modules:     Basil
 build-depends:       base >= 3 && < 5,
                      containers >= 0.2,
                      fclabels >= 0.4.2,
-                     mtl,
-                     multirec >= 0.4
-
+                     mtl

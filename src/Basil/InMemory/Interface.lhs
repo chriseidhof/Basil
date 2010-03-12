@@ -18,7 +18,6 @@
 > import Basil.Data.TList (Ix, modTList, lookupTList, lookupMapTList, Witnesses)
 > import Basil.Data.TList4
 > import Control.Applicative hiding (empty)
-> import Generics.MultiRec.Base hiding (index)
 > import qualified Control.Monad.State as ST
 > import qualified Data.Map as M
 > import qualified Data.Set as S

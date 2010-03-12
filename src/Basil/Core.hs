@@ -9,7 +9,6 @@ module Basil.Core where
 import Basil.Data.TList4
 import Basil.Data.TBoolean
 import Basil.Data.TList
-import Generics.MultiRec.Base hiding (index)
 
 data One
 data Many
