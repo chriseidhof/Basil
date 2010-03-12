@@ -21,22 +21,20 @@
 The function |storeAll| takes a reference to |r| and a |PList| containing the initial values for the relationships involving |r|, and stores them by applying |setValue| on each |InitialValue|.
 
 
-> storeAll  ::  (TEq phi, ERModel phi rels)
+> storeAll  ::  ERModel phi rels
 >           =>  Ref phi r
 >           ->  PList phi r env rels
->           ->  RelCache phi rels
->           ->  RelCache phi rels
+>           ->  RelCache rels
+>           ->  RelCache rels
 > storeAll ref PNil          = id
 > storeAll ref (PCons x xs)  = setValue ref x . storeAll ref xs
 
 The function |setValue| simply a relationship between a reference and an initial value. Based on the direction stored in the |InitialValue| it can determine the right order of the arguments.
 
-> setValue  :: (TEq phi, ERModel phi rels)
+> setValue  ::  ERModel phi rels
 >           =>  Ref phi (SourceType dir (Rel phi c1 t1 c2 t2))
 >           ->  InitialValue phi r dir (Rel phi c1 t1 c2 t2) rels
->           ->  RelCache phi rels
->           ->  RelCache phi rels
+>           ->  RelCache rels
+>           ->  RelCache rels
 > setValue  x (y,DL,  ix)  = insert ix x y
 > setValue  x (y,DR,  ix)  = insert ix y x
-
-%}

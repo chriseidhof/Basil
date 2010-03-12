@@ -43,7 +43,6 @@ Given a relationship and a direction we can compute both the source and target
 > type instance TargetType L  (Rel phi c1 t1 c2 t2) = t2
 > type instance TargetType R  (Rel phi c1 t1 c2 t2) = t1
 
-
 When we create a new entity we want to store the initial relationships. We 
 find those initial relationships by 
 building a filter function on the type-level. We will filter out all the 
@@ -57,8 +56,8 @@ side of the relationship set, while |InitialValues'| will look for |r| on the
 right-hand side of the relationship set. The |originalRels| is needed so we can 
 create pointers into the original list of all relationship sets.
 
-> type family   InitialValues   (phi :: * -> *) r rels originalRels :: *
-> type family   InitialValues'  (phi :: * -> *) r rels originalRels :: *
+> type family   InitialValues   phi r rels originalRels :: *
+> type family   InitialValues'  phi r rels originalRels :: *
 
 The base case is the empty list of relationship sets:
 
@@ -76,8 +75,8 @@ We will also encode the direction |L| in which it was found.
 
 > type instance InitialValues phi r (Rel phi c1 from One  to, xs) o = 
 >   AppendIfTrue  (TypeEq r from) 
->                 (InitialValue  phi r L (Rel phi c1 from One to) o) 
->                 (InitialValues'   phi r   (Rel phi c1 from One to, xs) o)
+>                 (InitialValue    phi r L (Rel phi c1 from One to) o) 
+>                 (InitialValues'  phi r   (Rel phi c1 from One to, xs) o)
 
 The |InitialValues'| function is very similar, it looks for |r| in a different direction by comparing it with |to| instead of |from|:
 
@@ -95,4 +94,4 @@ relationship sets in the domain model. We carry the |Dir| argument around explic
 
 > type InitialValue phi r dir rel rels =  (  Ref phi (TargetType dir rel)
 >                                         ,  Dir dir
->                                         ,  TIndex phi rel rels) 
+>                                         ,  Ix rels rel) 

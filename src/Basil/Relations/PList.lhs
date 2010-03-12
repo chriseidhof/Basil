@@ -17,7 +17,7 @@ is a type-level list that grows at each |PCons|. Finally,
 necessary to ensure an |InitialValue| always points to a valid relationship set
 in the ER model. 
 
-> data PList (phi :: * -> *) r env rels where
+> data PList phi r env rels where
 
 The constructor |PNil| builds an empty list:
 

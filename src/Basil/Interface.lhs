@@ -18,13 +18,13 @@ A common interface for persistency layers
 
 The typeclass |Persistent| has methods for all the operations on entities.
 
-> class Persistent (p :: (* -> *) -> * -> * -> * -> *) where
->   runIO  ::  p phi env rels a -> IO a
->   find   ::  (El phi entity) => Ref phi entity -> p phi env rels (Maybe entity)
->   new    ::  (El phi entity) 
->          =>  entity 
->          ->  PList phi entity (InitialValues phi entity rels rels) rels 
->          ->  p phi env rels (Ref phi entity)
+> -- class Persistent (p :: * -> * -> * -> * -> *) where
+> --   runIO  ::  p phi env rels a -> IO a
+> --   find   ::  (El phi entity) => Ref phi entity -> p phi env rels (Maybe entity)
+> --   new    ::  (El phi entity) 
+> --          =>  entity 
+> --          ->  PList phi entity (InitialValues phi entity rels rels) rels 
+> --          ->  p phi env rels (Ref phi entity)
 
 \todo{Show how two instances can be combined}
 

@@ -47,7 +47,7 @@ For an ER model, we enumerate all the relationship sets on the type-level using
 nested pairs that are growing to the right. We can reuse our |TList| datatype
 for storing all relationship sets |rels| in an ER model |phi|.
 
-> type RelCache phi rels = TList RelationStorageN phi rels
+> type RelCache rels = HList (TMap RelationStorageN rels)
 
 |RelationStorageN| is a newtype wrapping |RelationStorage| because Haskell does
 not support partially applied type families:
@@ -74,18 +74,19 @@ datastructure for each relationship set in the ER model. We give its type, but
 omit its definition. The |TList4| data structure is explained in section
 \ref{sec:tlist4}
 
-> empty :: TList4 Rel phi rels -> RelCache phi rels
-> empty relations = fromTList4 (RelationStorageN . emptyS) relations
+> empty :: HList rels -> RelCache rels
+> empty Nil = Nil
+> empty (Cons x xs) = Cons (RelationStorageN (emptyS x)) (empty xs)
 
 
 The |fromTList4| function is much like |map|, it lifts an |f| into a |g| structure
 that is indexed by that |f|:
 
-> fromTList4  ::  (forall a b c d . f phi a b c d -> g (f phi a b c d)) 
->             ->  TList4 f phi rels 
->             ->  TList g phi rels
-> fromTList4 f TNil4                = ()
-> fromTList4 f (TCons4 _ _ rel xs)  = (f rel, fromTList4 f xs)
+> -- fromTList4  ::  (forall a b c d . f phi a b c d -> g (f phi a b c d)) 
+> --             ->  TList4 f phi rels 
+> --             ->  TList g phi rels
+> -- fromTList4 f TNil4                = ()
+> -- fromTList4 f (TCons4 _ _ rel xs)  = (f rel, fromTList4 f xs)
 
 %endif
 
@@ -110,14 +111,14 @@ information to discover the type of the data-structure for that cardinality.
 We can now lift that function to the storage of all relationship sets in a
 model:
 
-> insert  ::  (ERModel phi rels) 
->         =>  TIndex phi (Rel phi c1 l c2 r) rels 
+> insert  ::  ERModel phi rels
+>         =>  Ix rels (Rel phi c1 l c2 r) 
 >         ->  Ref phi l 
 >         ->  Ref phi r
->         ->  RelCache phi rels
->         ->  RelCache phi rels
+>         ->  RelCache rels
+>         ->  RelCache rels
 > insert ix l r =  modTList 
->                  ( withRelationStorageN (insertS l r (lookupTList4 ix relations)) )
+>                  ( withRelationStorageN (insertS l r (lookupTList ix relations)) )
 >                  ix
 
 The helper function |withRelationStorageN| unwraps the newtype, applies the
@@ -134,7 +135,7 @@ relationship set this will be exactly one entity. In a one-to-many relationship 
 be a list of references. Before we define |lookup|, we will express its return type using 
 the |Value| type-family:
 
-> type family Value (phi :: * -> *) cardinality typ :: *
+> type family Value phi cardinality typ :: *
 > type instance Value phi One   t = Ref phi t
 > type instance Value phi Many  t = S.Set (Ref phi t)
 
@@ -176,18 +177,18 @@ We can again lift both |lookupS| and |lookupS'|, which work on individual
 relationship sets, to all relationship sets in an ER model:
 
 > lookup  ::  ERModel phi rels
->         =>  TIndex phi (Rel phi c1 l c2 r) rels 
+>         =>  Ix rels (Rel phi c1 l c2 r)
 >         ->  Ref phi l 
->         ->  RelCache phi rels
+>         ->  RelCache rels
 >         ->  Maybe (Value phi c2 r)
 > lookup = gLookup lookupS
 
 %if False
 
 > lookup'  ::  ERModel phi rels 
->          =>  TIndex phi (Rel phi c1 l c2 r) rels 
+>          =>  Ix rels (Rel phi c1 l c2 r)
 >          ->  Ref phi r 
->          ->  RelCache phi rels
+>          ->  RelCache rels
 >          ->  Maybe (Value phi c1 l)
 > lookup' = gLookup lookupS'
 
@@ -196,15 +197,15 @@ relationship sets, to all relationship sets in an ER model:
 The functions |lookup| and |lookup'| are so similar that we define a helper
 function |gLookup|, which does the heavy lifting:
 
-> gLookup  ::  ERModel phi env
+> gLookup  ::  ERModel phi rels
 >          =>  (t -> ix -> RelationStorage ix -> c)
->          ->  TIndex phi ix env
+>          ->  Ix rels ix
 >          ->  t
->          ->  TList RelationStorageN phi env
+>          ->  TMap RelationStorageN rels
 >          ->  c
-> gLookup lookupFunc ix r  =  lookupFunc r (lookupTList4 ix relations) 
+> gLookup lookupFunc ix r  =  lookupFunc r (lookupTList ix relations) 
 >                          .  unRelationStorageN 
->                          .  lookupTList ix
+>                          .  lookupMapTList ix
 
 We now have defined a basic interface for storing relationships. We have built a
 function that creates an empty datastructure, a function that inserts into the
