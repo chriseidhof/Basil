@@ -3,19 +3,28 @@
 > module Basil.Database.Relational.Operations where
 >
 > import Basil.Database.Relational.Core
+> import Basil.Database.Relational.Utils
+> import Basil.Data.TList
 
 %endif
 
 We can now define some operations on our tables. The implementations are straightforward and can be found in the library accomplishing this thesis.
 
-> -- create  :: Table db row -> row -> IO Int
-> -- read    :: Table db row -> Int -> IO (Maybe row)
-> -- update  :: Table db row -> Int -> row -> IO ()
-> -- delete  :: Table db row -> Int -> IO ()
+> create  :: Table row -> HList row -> IO Int
+> read    :: Table row -> Int -> IO (Maybe (HList row))
+> update  :: Table row -> Int -> HList row -> IO ()
+> delete  :: Table row -> Int -> IO ()
 
 %if False
 
-> create  = undefined
+> create (nm, keys) row = unwords
+>  [ "INSERT INTO "
+>  , nm
+>  , parens (tableSqlFields keys)
+>  , "VALUES"
+>  , parens (tableSqlValues row)
+>  ]
+
 > read    = undefined
 > update  = undefined
 > delete  = undefined

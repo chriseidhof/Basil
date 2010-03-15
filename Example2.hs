@@ -19,53 +19,20 @@ data Tag     = TagC {tag :: String} deriving Show
 
 type Blog = User :*: Post :*: Comment :*: Tag :*: Nil
 
-ixUser    = Zero
-ixPost    = Suc (Zero)
-ixComment = Suc (Suc Zero)
-ixTag     = Suc (Suc (Suc Zero))
-
--- data Blog :: * -> * where
---   User    :: Blog User
---   Post    :: Blog Post
---   Comment :: Blog Comment
---   Tag     :: Blog Tag
 
 $(mkLabels [''User, ''Post, ''Comment, ''Tag])
 
-type BlogRelationsEnum =    ((One `To` Many) User Post)
-                       :*:  ((One `To` Many) User Comment)
-                       :*:  ((One `To` Many) Post Comment)
-                       :*:  ((One `To` Many) User User)
-                       :*:  Nil
-
-instance ERModel Blog BlogRelationsEnum where
-  relations = TCons4 authorPosts 
-            $ TCons4 authorComments 
-            $ TCons4 postComments 
-            $ TCons4 parentChildren
-            $ TNil4
-  witnesses = WCons Zero (WCons (Suc Zero) (WCons (Suc (Suc Zero)) (WCons (Suc (Suc (Suc Zero))) WNil)))
-
-
-authorPosts    = mkRelation ("author", One, ixUser)   ("posts"   , Many, ixPost)
-authorComments = mkRelation ("author", One, ixUser)   ("comments", Many, ixComment)
-postComments   = mkRelation ("post"  , One, ixPost)   ("comments", Many, ixComment)
-parentChildren = mkRelation ("parent", One, ixUser)   ("children", Many, ixUser)
-
-type To m1 m2 t1 t2 = Rel Blog m1 t1 m2 t2
-
+-- QuasiQuoting ideas:
+--   ermodel Blog | User Post Comment Tag Nil with
+--     author User  <> posts    Post*
+--     author User  <> comments Comment*
+--     parent User  <> children User*
+--     post   Post  <> comments Comment*
+--     posts  Post* <> tags Tag*
 
 exampleUser  n = UserC    n "test" 24
 examplePost    = PostC    "fipo" "my first post"
 exampleComment = CommentC "a comment!"
-
-parent :: Ref Blog User -> InitialValue Blog User R ((One `To` Many) User User) BlogRelationsEnum
-parent   x = (x, DR,  Suc (Suc (Suc Zero)))
-children x = (x, DL,  Suc (Suc (Suc Zero)))
-
-authorP x = (x, DR, Zero)
-
-age_ = Attribute "age" age
 
 -- example flow
 --
@@ -89,7 +56,17 @@ test' =
        X.setValue (Ref ixUser (Fresh 1)) ((Ref ixPost (Fresh 3)), DL, Zero)
      $ B.empty (relations :: TList4 Rel BlogRelationsEnum)
 
--- boilerplate
+-- boilerplate, will be generated using quasiquoting.
+
+parent :: Ref Blog User -> InitialValue Blog User R ((One `To` Many) User User) BlogRelationsEnum
+parent   x = (x, DR,  Suc (Suc (Suc Zero)))
+children x = (x, DL,  Suc (Suc (Suc Zero)))
+
+authorP x = (x, DR, Zero)
+
+age_ = Attribute "age" age
+
+
 type instance TypeEq User     User    = True 
 type instance TypeEq User     Post    = False
 type instance TypeEq User     Comment = False
@@ -106,3 +83,30 @@ type instance TypeEq Tag      User    = False
 type instance TypeEq Tag      Post    = False
 type instance TypeEq Tag      Comment = False
 type instance TypeEq Tag      Tag     = True
+
+ixUser    = Zero
+ixPost    = Suc (Zero)
+ixComment = Suc (Suc Zero)
+ixTag     = Suc (Suc (Suc Zero))
+type BlogRelationsEnum =    ((One `To` Many) User Post)
+                       :*:  ((One `To` Many) User Comment)
+                       :*:  ((One `To` Many) Post Comment)
+                       :*:  ((One `To` Many) User User)
+                       :*:  Nil
+
+instance ERModel Blog BlogRelationsEnum where
+  relations = TCons4 authorPosts 
+            $ TCons4 authorComments 
+            $ TCons4 postComments 
+            $ TCons4 parentChildren
+            $ TNil4
+  witnesses = WCons Zero (WCons (Suc Zero) (WCons (Suc (Suc Zero)) (WCons (Suc (Suc (Suc Zero))) WNil)))
+
+
+authorPosts    = mkRelation ("author", One, ixUser)   ("posts"   , Many, ixPost)
+authorComments = mkRelation ("author", One, ixUser)   ("comments", Many, ixComment)
+postComments   = mkRelation ("post"  , One, ixPost)   ("comments", Many, ixComment)
+parentChildren = mkRelation ("parent", One, ixUser)   ("children", Many, ixUser)
+
+type To m1 m2 t1 t2 = Rel Blog m1 t1 m2 t2
+
