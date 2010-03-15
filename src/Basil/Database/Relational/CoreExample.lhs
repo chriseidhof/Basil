@@ -1,6 +1,6 @@
 %if False
 
-> {-# LANGUAGE TypeOperators #-}
+> {-# LANGUAGE TypeOperators, FlexibleContexts #-}
 >
 > module Basil.Database.Relational.CoreExample where
 >
@@ -9,6 +9,8 @@
 > import Basil.Database.Relational.Operations
 > import Basil.Database.Relational.Schema
 > import Basil.Database.Relational.Takusen
+> import Database.Enumerator
+> import Database.Sqlite.Enumerator
 
 %endif
 
@@ -16,12 +18,19 @@ We can now model a schema for a table |users|:
 
 > type UserRow = String :*: Int :*: String :*: Nil
 >
-> userSchema :: Schema UserRow
-> userSchema   =   Attr "name"   bindP String 
->             .**. Attr "age"    bindP Int 
->             .**. Attr "email"  bindP String 
+> userSchema :: (  DBBind Int    Session stmt bo
+>               ,  DBBind String Session stmt bo
+>               )
+>            => Schema stmt bo UserRow
+> userSchema   =   Attr "name"   String bindP
+>             .**. Attr "age"    Int    bindP
+>             .**. Attr "email"  String bindP
 >             .**. Nil2
-> userTable :: Table UserRow
+
+> userTable :: (  DBBind Int    Session stmt bo
+>               ,  DBBind String Session stmt bo
+>               )
+>            => Table stmt bo UserRow
 > userTable = ("users", userSchema)
 
 Constructing a row for the table is as easy as constructing a value of
