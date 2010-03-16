@@ -15,7 +15,7 @@ I have the feeling that we can provide a high-level, typed interface to a number
 
 ## What problems does it not solve?
 
-TODO
+Basil will focus only on the data layer.
 
 ## Scratchpad functionality
 
@@ -23,14 +23,15 @@ Basil was inspired by CoreData. The envisioned scratchpad functionality is based
 
 * You try to read out the User object with id 1
 * This is looked up in the in-memory database. If it's not present, it is looked up in the sqlite database.
-* Some objects are changed, relationships are changed, etc. This is only reflected in the in-memory database.
+* Some objects are changed, relationships are changed, etc. This is only stored in the in-memory database.
 * When the state is committed, the changes that are in the in-memory database are saved to the sqlite database.
+* Alternatively, 
 
 Of course, if we have a common interface for the in-memory database and the sqlite database we could swap both of them for other components. In fact, we could stack multiple data storage layers on top of each other.
 
 ## Current state
 
-The code is very alpha.
+The code is very much in alpha state.
 
 ## Roadmap
 
@@ -40,6 +41,11 @@ The roadmap is roughly like this:
 * Build TH for generating all the boilerplate (see Example2.lhs)
 * Test heavily
 * Write scratchpad functionality
+
+## Possible features
+
+* Transactions 
+* Undo/redo support
 
 ## Examples
 

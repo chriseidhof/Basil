@@ -13,10 +13,10 @@ This module implements the code to create database schemas.
 
 %endif
 
-> createTable :: Table stmt bo row -> IO ()
+> createTable :: Table row -> IO ()
 > createTable (name, fields) = undefined
 
-> createTableSql :: Table stmt bo row -> String
+> createTableSql :: Table row -> String
 > createTableSql (name, fields) = unwords
 >    [ "CREATE TABLE"
 >    , name

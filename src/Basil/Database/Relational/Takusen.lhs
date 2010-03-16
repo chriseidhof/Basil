@@ -13,7 +13,7 @@
 
 We can convert a value of |Base| to an sql value:
 
-> toSql :: DBBind a Session stmt bo =>  Base a -> a -> BindA Session stmt bo
+> toSql :: Base a -> a -> BindA Session PreparedStmtObj BindObj
 > toSql String = bindP
 > toSql Int    = bindP
 > toSql Bool   = bindP

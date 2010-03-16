@@ -27,17 +27,17 @@ set of types called |Base|, containing a code for every such type:
 
 An attribute can now be modeled by taking a name and a code in |Base|:
 
-> data Attr stmt bo t where
->   Attr :: String -> Base t -> (t -> BindA sess stmt bo) -> Attr stmt bo t
+> data Attr t where
+>   Attr :: String -> Base t -> Attr t
 
 A table schema is a list of attributes. We can reuse our |TList| datatype. The
 |db| type variable is similar to |phi| in the previous sections: it is a family
 with all the tables in our database.
 
-> type Schema stmt bo db = HList2 (Attr stmt bo) db
+> type Schema db = HList2 Attr db
 
 %include CoreExample.lhs
 
 A table is simply a schema with a name
 
-> type Table stmt bo db = (String, Schema stmt bo db)
+> type Table db = (String, Schema db)

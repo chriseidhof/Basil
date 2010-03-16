@@ -18,19 +18,13 @@ We can now model a schema for a table |users|:
 
 > type UserRow = String :*: Int :*: String :*: Nil
 >
-> userSchema :: (  DBBind Int    Session stmt bo
->               ,  DBBind String Session stmt bo
->               )
->            => Schema stmt bo UserRow
-> userSchema   =   Attr "name"   String bindP
->             .**. Attr "age"    Int    bindP
->             .**. Attr "email"  String bindP
+> userSchema :: Schema UserRow
+> userSchema   =   Attr "name"   String
+>             .**. Attr "age"    Int   
+>             .**. Attr "email"  String
 >             .**. Nil2
 
-> userTable :: (  DBBind Int    Session stmt bo
->               ,  DBBind String Session stmt bo
->               )
->            => Table stmt bo UserRow
+> userTable :: Table UserRow
 > userTable = ("users", userSchema)
 
 Constructing a row for the table is as easy as constructing a value of

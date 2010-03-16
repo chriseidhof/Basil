@@ -11,10 +11,10 @@
 
 We can now define some operations on our tables. The implementations are straightforward and can be found in the library accomplishing this thesis.
 
-> create  :: Table stmt bo row -> HList row -> IO Int
-> read    :: Table stmt bo row -> Int -> IO (Maybe (HList row))
-> update  :: Table stmt bo row -> Int -> HList row -> IO ()
-> delete  :: Table stmt bo row -> Int -> IO ()
+> create  :: Table row -> HList row -> IO Int
+> read    :: Table row -> Int -> IO (Maybe (HList row))
+> update  :: Table row -> Int -> HList row -> IO ()
+> delete  :: Table row -> Int -> IO ()
 
 %if False
 
