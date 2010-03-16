@@ -12,10 +12,10 @@ import qualified Basil.InMemory.Relations as X
 import qualified Basil.Relations.InitialValues as I
 import qualified Data.Map as M
 
-data User = UserC {name :: String, password :: String, age :: Int} deriving (Show)
-data Post = PostC {title :: String, body :: String} deriving (Show)
+data User    = UserC    {name :: String, password :: String, age :: Int} deriving (Show)
+data Post    = PostC    {title :: String, body :: String} deriving (Show)
 data Comment = CommentC {text :: String} deriving Show
-data Tag     = TagC {tag :: String} deriving Show
+data Tag     = TagC     {tag :: String} deriving Show
 
 type Blog = User :*: Post :*: Comment :*: Tag :*: Nil
 
