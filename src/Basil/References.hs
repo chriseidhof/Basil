@@ -3,8 +3,8 @@ module Basil.References where
 
 import Basil.Data.TList (Ix)
 
-data Ref (phi :: *) (ix :: *) where
-  Ref { pr :: Ix phi ix, pKey :: Ident } ::  Ref phi ix
+data Ref model a where
+  Ref { pr :: Ix model a, pKey :: Ident } ::  Ref model a
 
 data RefList phi ix where
   RLNil :: RefList phi ix

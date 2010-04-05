@@ -33,4 +33,5 @@ exposed-modules:     Basil
 build-depends:       base >= 3 && < 5,
                      containers >= 0.2,
                      fclabels >= 0.4.2,
-                     mtl
+                     Takusen >= 0.8.6,
+                     monads-fd

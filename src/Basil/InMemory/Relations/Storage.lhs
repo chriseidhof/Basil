@@ -1,6 +1,7 @@
 %if False 
 
-> {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types #-}
+> {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances,
+>              Rank2Types, GADTs #-}
 > module Basil.InMemory.Relations.Storage where
 > 
 > import Basil.InMemory.Cache
@@ -26,9 +27,11 @@ We only consider relationships between two entities with a cardinality of
 one-to-one, one-to-many, many-to-one or many-to-many. Relationships are grouped
 into relationship sets, where all relationships are between the same entity
 types and have the same cardinality. Based on the cardinality, we can choose a
-datatype to store the relationships. Because |One| and |Many| play an important
+datatype to store the relationships. We do this using a type-level function
+|RelationStorage|, defined in Figure \ref{tfun:RelationStorage}. Because |One| and |Many| play an important
 role in this section, they are highlighted.
 
+\begin{figure}
 > type  family     RelationStorage rel :: *
 > type  instance   RelationStorage (Rel phi  One  r1  One   r2)  = 
 >                  M.Map   (Ref phi r1)  (Ref phi r2)
@@ -39,22 +42,24 @@ role in this section, they are highlighted.
 > type  instance   RelationStorage (Rel phi  Many r1  Many  r2)  = 
 >                  (  M.Map  (Ref phi r1  )  (S.Set (Ref phi r2))
 >                  ,  M.Map  (Ref phi r2  )  (S.Set (Ref phi r1)))
-
+\caption{The |RelationStorage| function}
 \label{tfun:RelationStorage}
+\end{figure}
+
+
 
 
 For an ER model, we enumerate all the relationship sets on the type-level using
-nested pairs that are growing to the right. We can reuse our |TList| datatype
+nested pairs that are growing to the right. We can reuse our |HList| datatype
 for storing all relationship sets |rels| in an ER model |phi|.
 
 > type RelCache rels = HList (TMap RelationStorageN rels)
 
-|RelationStorageN| is a newtype wrapping |RelationStorage| because Haskell does
-not support partially applied type families:
+Again, |RelationStorageN| is a newtype wrapping |RelationStorage| because
+Haskell does not support partially applied type families (similar to the
+partially applied |type| declarations in the previous section) :
 
 > newtype RelationStorageN a = RelationStorageN { unRelationStorageN :: RelationStorage a}
->
-
 
 Given a relationship set, we can create an empty datastructure for it. We will
 add the suffix |S| to a function to indicate that we are dealing with functions
@@ -108,7 +113,8 @@ information to discover the type of the data-structure for that cardinality.
 >     )
 
 We can now lift that function to the storage of all relationship sets in a
-model:
+model. This looks up the right |RelationStorage| datatype using the |ix| value,
+and changes it using the |insertS| function.
 
 > insert  ::  ERModel phi rels
 >         =>  Ix rels (Rel phi c1 l c2 r) 

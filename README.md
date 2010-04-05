@@ -25,7 +25,7 @@ Basil was inspired by CoreData. The envisioned scratchpad functionality is based
 * This is looked up in the in-memory database. If it's not present, it is looked up in the sqlite database.
 * Some objects are changed, relationships are changed, etc. This is only stored in the in-memory database.
 * When the state is committed, the changes that are in the in-memory database are saved to the sqlite database.
-* Alternatively, 
+* Alternatively, the changes might "cancelled" by the user.
 
 Of course, if we have a common interface for the in-memory database and the sqlite database we could swap both of them for other components. In fact, we could stack multiple data storage layers on top of each other.
 
@@ -40,6 +40,7 @@ The roadmap is roughly like this:
 * Add Sqlite backend
 * Build TH for generating all the boilerplate (see Example2.lhs)
 * Test heavily
+* Work on queries (src/Basil/Query.lhs).
 * Write scratchpad functionality
 
 ## Possible features

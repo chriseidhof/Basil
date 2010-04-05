@@ -39,7 +39,7 @@ exampleComment = CommentC "a comment!"
 
 example :: Basil Blog BlogRelationsEnum [(Ref Blog User, User)]
 example = do chris    <- new ixUser (exampleUser "chris") ((parent (Ref ixUser (UID 999))) `PCons` (PNil))
-             piet     <- new ixUser (exampleUser "piet") ((parent chris) `PCons` (PNil))
+             piet     <- new ixUser (exampleUser "piet") ((parent chris) `PCons` PNil)
              post     <- new ixPost examplePost (PCons (authorP chris) PNil)
              --auth     <- getRelation post (DR, Zero)
              age      <- attr chris lAge
@@ -88,6 +88,7 @@ ixUser    = Zero
 ixPost    = Suc (Zero)
 ixComment = Suc (Suc Zero)
 ixTag     = Suc (Suc (Suc Zero))
+
 type BlogRelationsEnum =    ((One `To` Many) User Post)
                        :*:  ((One `To` Many) User Comment)
                        :*:  ((One `To` Many) Post Comment)
