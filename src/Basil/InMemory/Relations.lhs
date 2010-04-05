@@ -18,8 +18,10 @@
 %endif
 
 
-The function |storeAll| takes a reference to |r| and a |PList| containing the initial values for the relationships involving |r|, and stores them by applying |setValue| on each |InitialValue|.
-
+The function |storeAll| takes a reference to |r| and a |PList| containing the
+initial values for the relationships involving |r|, and stores them by applying
+|setValue| on each |InitialValue|. For example, if |r| is the |Entity| type, the
+|PList| will contain a single element with a reference to a |Compiler| value.
 
 > storeAll  ::  ERModel phi rels
 >           =>  Ref phi r
@@ -29,7 +31,10 @@ The function |storeAll| takes a reference to |r| and a |PList| containing the in
 > storeAll ref PNil          = id
 > storeAll ref (PCons x xs)  = setValue ref x . storeAll ref xs
 
-The function |setValue| simply a relationship between a reference and an initial value. Based on the direction stored in the |InitialValue| it can determine the right order of the arguments.
+The function |setValue| stores a single relationship between a reference and an
+initial value.
+Based on the direction |DL| or |DR|, stored in the |InitialValue|, it can determine the right
+order of the arguments.
 
 > setValue  ::  ERModel phi rels
 >           =>  Ref phi (SourceType dir (Rel phi c1 t1 c2 t2))

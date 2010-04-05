@@ -47,11 +47,12 @@ Given a relationship and a direction we can compute both the source and target
 When we create a new entity we want to store the initial relationships. We 
 find those initial relationships by 
 building a filter function on the type-level. We will filter out all the 
-to-one relationship sets that apply to the given entity type. For example,
-\todo.
+to-one relationship sets that apply to the given entity type.
+For example, in the case of creating a new |Release| entity, the only included
+relationship has to be |releases|.
 
-The 
-given entity type can be on either side of the relationship set, so we split 
+The  difficult part is that a
+given entity type can be on either side of the relationship set. Therefore, we split 
 up our function into two parts. |InitialValues| will look for |r| on the left-hand 
 side of the relationship set, while |InitialValues'| will look for |r| on the
 right-hand side of the relationship set. The |originalRels| is needed so we can 
@@ -91,7 +92,8 @@ The |InitialValues'| function is very similar, it looks for |r| in a different d
 
 An |InitialValue| for a relationship contains a reference to the target entity,
 the direction of the relationship and the index of the relationship set into all
-relationship sets in the domain model. We carry the |Dir| argument around explicitly so that we can pattern-match on it in the next module.
+relationship sets in the domain model. 
+We carry the |Dir| argument around explicitly so that we can pattern-match on it in the next module.
 
 > type InitialValue phi r dir rel rels =  (  Ref phi (TargetType dir rel)
 >                                         ,  Dir dir

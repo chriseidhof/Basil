@@ -31,6 +31,11 @@ datatype to store the relationships. We do this using a type-level function
 |RelationStorage|, defined in Figure \ref{tfun:RelationStorage}. Because |One| and |Many| play an important
 role in this section, they are highlighted.
 
+A many-to-many relationship is stored as two |Map| datatypes.
+This allows for quick lookup.
+A disadvantage is that it takes more memory, but as we only store references, we
+expect that it will not be a problem in practice.
+
 \begin{figure}
 > type  family     RelationStorage rel :: *
 > type  instance   RelationStorage (Rel phi  One  r1  One   r2)  = 
@@ -46,12 +51,9 @@ role in this section, they are highlighted.
 \label{tfun:RelationStorage}
 \end{figure}
 
-
-
-
-For an ER model, we enumerate all the relationship sets on the type-level using
-nested pairs that are growing to the right. We can reuse our |HList| datatype
-for storing all relationship sets |rels| in an ER model |phi|.
+All our relationship types |rels| are stored as a type-level list. Therefore, we
+can apply the technique from the previous section, and build an |HList| with a
+|RelationStorageN| datatype for each relationship type. 
 
 > type RelCache rels = HList (TMap RelationStorageN rels)
 
@@ -74,7 +76,7 @@ sets in an ER model will not have this suffix.
 
 %if False
 
-We can map over the list of all relationship sets |rels| to create an empty
+We can now map over the list of all relationship sets |rels| to create an empty
 datastructure for each relationship set in the ER model. We give its type, but
 omit its definition. The |TList4| data structure is explained in section
 \ref{sec:tlist4}
@@ -82,9 +84,9 @@ omit its definition. The |TList4| data structure is explained in section
 > empty :: TList4 Rel rels -> RelCache rels
 > empty = fromTList4 (RelationStorageN . emptyS)
 
-
 The |fromTList4| function is much like |map|, it lifts an |f| into a |g| structure
-that is indexed by that |f|:
+that is indexed by that |f|. In the code above, the |f| is the |Rel| type and
+the |g| is the type |RelationStorageN|.
 
 > fromTList4  ::  (forall a b c d phi . f phi a b c d -> g (f phi a b c d)) 
 >             ->  TList4 f rels 
@@ -95,9 +97,13 @@ that is indexed by that |f|:
 %endif
 
 Given two references and a relationship set we can insert the relationship into
-the |RelationStorage| for that specific relationshipset . By pattern-matching on
+the |RelationStorage| for that specific relationship set. By pattern-matching on
 the cardinality inside the |Rel| datatype we provide the compiler with enough
 information to discover the type of the data-structure for that cardinality.
+Figure \ref{fun:insertS} shows the |insertS| function that creates a
+relationship.
+
+\begin{figure}
 
 > insertS  ::  Ref phi l 
 >          ->  Ref phi r 
@@ -111,6 +117,10 @@ information to discover the type of the data-structure for that cardinality.
 >     (  M.alter (Just . maybe (S.singleton r)  (S.insert r))  l s1
 >     ,  M.alter (Just . maybe (S.singleton l)  (S.insert l))  r s2
 >     )
+
+\caption{The |insertS| function}
+\label{fun:insertS}
+\end{figure}
 
 We can now lift that function to the storage of all relationship sets in a
 model. This looks up the right |RelationStorage| datatype using the |ix| value,
@@ -140,16 +150,15 @@ relationship set this will be exactly one entity. In a one-to-many relationship 
 be a list of references. Before we define |lookup|, we will express its return type using 
 the |Value| type-family:
 
-> type family Value phi cardinality typ :: *
-> type instance Value phi One   t = Ref phi t
-> type instance Value phi Many  t = S.Set (Ref phi t)
+> type family    Value phi cardinality typ :: *
+> type instance  Value phi One         t   = Ref phi t
+> type instance  Value phi Many        t   = S.Set (Ref phi t)
 
 Now we can write the |lookupS| function that looks up all the relationships.
 Note that this function is quite inefficient for the one-to-many relationship.
-Overall, the data-structures could be improved to be more database-like.
-However, this in-memory database is just a proof of concept, but can probably be
-made quite fast by changing the datastructures in the |RelationStorage|
-type function on page \pageref{tfun:RelationStorage}.
+Of course, the data-structures defined above could be changed to be more database-like.
+However, this in-memory database is just a proof of concept, and choosing highly
+efficient data-structures is beyond the scope of this thesis.
 
 > lookupS  ::  Ref phi l 
 >          ->  Rel phi c1 l c2 r 
@@ -215,6 +224,8 @@ function |gLookup|, which does the heavy lifting:
 We now have defined a basic interface for storing relationships. We have built a
 function that creates an empty datastructure, a function that inserts into the
 datastructure and a function that does a lookup.
+Again, functions for modifying and deleting relationships are similar to insert
+and lookup.
 
 %if False
 
