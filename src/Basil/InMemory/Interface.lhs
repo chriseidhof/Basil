@@ -1,12 +1,14 @@
 %if False
 
-> {-# LANGUAGE ScopedTypeVariables   #-}
-> {-# LANGUAGE FlexibleContexts   #-}
-> {-# LANGUAGE Rank2Types   #-}
-> {-# LANGUAGE TypeOperators   #-}
-> {-# LANGUAGE GADTs   #-}
-> {-# LANGUAGE UndecidableInstances   #-}
-> module Basil.InMemory.Interface (runBasil, find, new, query, attr, {- getRelation, setRelation, -} Basil (), BasilState) where
+> {-# LANGUAGE ScopedTypeVariables
+>            , FlexibleContexts
+>            , Rank2Types
+>            , TypeOperators
+>            , GADTs
+>            , UndecidableInstances
+>            , TypeFamilies
+>            #-}
+> module Basil.InMemory.Interface (runBasil, find, new, findRels, query, attr, {- getRelation, setRelation, -} Basil (), BasilState) where
 > 
 > import Basil.Core
 > import Basil.Query
@@ -23,20 +25,20 @@
 > import qualified Data.Set as S
 > import qualified Basil.Interface as P
 > import Data.Record.Label hiding (set)
-> import Prelude hiding (mod)
+> import Prelude hiding (mod, lookup)
 
 %endif
 
 %if not query
 
-We will now combine the storage of relations and the storage of entities to build the actual in-memory database. For convenience, we introduce a |BasilState| datatype that also stores an |Int| value that is a fresh-variable supply for creating new entities.
+We will now combine the storage of relations and the storage of entities to build the actual in-memory database.
+We introduce a |BasilState| datatype that stores the entities, relationships and an |Int| value.
+The |Int| value is used as a fresh-variable supply for creating new entities.
 
-> data BasilState phi rels where
->   BasilState :: ERModel phi rels
->              => Cache phi 
->              -> RelCache rels
->              -> Int 
->              -> BasilState phi rels
+> data BasilState phi rels = BasilState  {  entities_       :: (Cache phi)
+>                                        ,  relationships_  :: (RelCache rels)
+>                                        ,  freshVariable_  :: Int
+>                                        } 
 
 We introduce a type synonym |Basil| that is a state monad with |BasilState| as its state.
 
@@ -56,14 +58,19 @@ We can now define a |find| method that searches the state for the entity of type
 > find (Ref tix entity)  =    M.lookup entity . get cached . lookupMapTList tix
 >                        <$>  getM cache
 
-Creating a new entitiy is a bit more involved. This is where our library shines: we not only ask for a value of |entity|, but also ask for all its |InitialValues| (see section \ref{sec:initialvalues}). This way, we make sure that all the right relationships are added.
+Creating a new entitiy is a bit more involved.
+Not only do we ask for a value of |entity|, but also for all its |InitialValues| (see section \ref{sec:initialvalues}).
+This way, we make sure that all the right relationships are added.
+For example, the |new| function for the |Release| entity also asks for a |PList| that contains a |Compiler| entity.
 
 > new  ::  Ix phi entity
 >      ->  entity 
 >      ->  PList phi entity (InitialValues phi entity rels rels) rels 
 >      ->  Basil phi rels (Ref phi entity)
 
-First, we will get a fresh integer that can be used for creating a reference. We then store the entity, and finally, the relationships. 
+First, we will get a fresh integer that can be used for creating a reference.
+We then store the entity, and relationships.
+Finally, we return the newly created reference.
 
 > new tix i rels = do 
 >   freshId <- getM freshVariable
@@ -75,11 +82,21 @@ First, we will get a fresh integer that can be used for creating a reference. We
 >   modM relCache (storeAll ref rels)
 >   return ref
 
+To lookup the relationships for an entity and a relationship set, we provide the |findRels| function, which is defined in terms of the |lookup| function from section \ref{sec:inmemrels}.
+
+> findRels  ::  ( cTarget  ~ TargetCardinality dir rel
+>               , tTarget  ~ TargetType        dir rel
+>               , source   ~ SourceType        dir rel
+>               , rel ~ (Rel phi c1 l c2 r)
+>               )
+>           =>  Dir dir
+>           ->  Ix rels rel
+>           ->  Ref phi source
+>           ->  Basil phi rels (Maybe (Value phi cTarget tTarget))
+> findRels dir ix ref = lookup dir ix ref <$> getM relCache
 
 
-
-
-Finally, we can provide a |runBasil| method that executes an in-memory database expression, yielding an |a| and the resulting state:
+Finally, we can provide a |runBasil| method that executes an in-memory database expression, which yields an |a| and the resulting state, given an initial state.
 
 > runBasil  ::  forall phi rels a . ERModel phi rels
 >           =>  Basil phi rels a 

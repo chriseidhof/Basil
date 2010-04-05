@@ -44,6 +44,10 @@ Given a relationship and a direction we can compute both the source and target
 > type instance TargetType L  (Rel phi c1 t1 c2 t2) = t2
 > type instance TargetType R  (Rel phi c1 t1 c2 t2) = t1
 
+> type family TargetCardinality dir rel :: *
+> type instance TargetCardinality L  (Rel phi c1 t1 c2 t2) = c2
+> type instance TargetCardinality R  (Rel phi c1 t1 c2 t2) = c1
+
 When we create a new entity we want to store the initial relationships. We 
 find those initial relationships by 
 building a filter function on the type-level. We will filter out all the 

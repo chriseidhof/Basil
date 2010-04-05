@@ -5,6 +5,7 @@
 > module Basil.InMemory.Relations.Storage where
 > 
 > import Basil.InMemory.Cache
+> import Basil.Relations.InitialValues
 > import Basil.Core
 > import Basil.References
 > import Basil.Data.TList
@@ -13,6 +14,7 @@
 > import qualified Data.Set as S
 > import qualified Data.Maybe as Maybe
 > import qualified Debug.Trace as D
+> import Prelude hiding (lookup)
 
 
 This is the base module where we define how to store relationships. 
@@ -37,6 +39,7 @@ A disadvantage is that it takes more memory, but as we only store references, we
 expect that it will not be a problem in practice.
 
 \begin{figure}
+
 > type  family     RelationStorage rel :: *
 > type  instance   RelationStorage (Rel phi  One  r1  One   r2)  = 
 >                  M.Map   (Ref phi r1)  (Ref phi r2)
@@ -47,6 +50,7 @@ expect that it will not be a problem in practice.
 > type  instance   RelationStorage (Rel phi  Many r1  Many  r2)  = 
 >                  (  M.Map  (Ref phi r1  )  (S.Set (Ref phi r2))
 >                  ,  M.Map  (Ref phi r2  )  (S.Set (Ref phi r1)))
+
 \caption{The |RelationStorage| function}
 \label{tfun:RelationStorage}
 \end{figure}
@@ -190,25 +194,25 @@ of the |Ref| and the result value have changed:
 We can again lift both |lookupS| and |lookupS'|, which work on individual
 relationship sets, to all relationship sets in an ER model:
 
-> lookup  ::  ERModel phi rels
->         =>  Ix rels (Rel phi c1 l c2 r)
->         ->  Ref phi l 
->         ->  RelCache rels
->         ->  Maybe (Value phi c2 r)
-> lookup = gLookup lookupS
+> lookupLeft  ::  ERModel phi rels
+>             =>  Ix rels (Rel phi c1 l c2 r)
+>             ->  Ref phi l 
+>             ->  RelCache rels
+>             ->  Maybe (Value phi c2 r)
+> lookupLeft = gLookup lookupS
 
 %if False
 
-> lookup'  ::  ERModel phi rels 
->          =>  Ix rels (Rel phi c1 l c2 r)
->          ->  Ref phi r 
->          ->  RelCache rels
->          ->  Maybe (Value phi c1 l)
-> lookup' = gLookup lookupS'
+> lookupRight  ::  ERModel phi rels 
+>              =>  Ix rels (Rel phi c1 l c2 r)
+>              ->  Ref phi r 
+>              ->  RelCache rels
+>              ->  Maybe (Value phi c1 l)
+> lookupRight = gLookup lookupS'
 
 %endif
 
-The functions |lookup| and |lookup'| are so similar that we define a helper
+The functions |lookupLeft| and |lookupRight| are so similar that we define a helper
 function |gLookup|, which does the heavy lifting:
 
 > gLookup  ::  ERModel phi rels
@@ -221,17 +225,36 @@ function |gLookup|, which does the heavy lifting:
 >                          .  unRelationStorageN 
 >                          .  lookupMapTList ix
 
+The function |lookup| dispatches to either |lookupLeft| or |lookupRight| based on the
+direction. This will become useful once we provide an interface to the user.
+
+> lookup ::    (  ERModel phi rels
+>              ,  cTarget  ~ TargetCardinality dir rel
+>              ,  tTarget  ~ TargetType        dir rel
+>              ,  source   ~ SourceType        dir rel
+>              ,  rel ~ (Rel phi c1 l c2 r)
+>              )
+>           => Dir dir
+>           -> Ix rels rel
+>           -> Ref phi source
+>           -> RelCache rels
+>           -> Maybe (Value phi cTarget tTarget)
+> lookup DL = lookupLeft
+> lookup DR = lookupRight
+
 We now have defined a basic interface for storing relationships. We have built a
 function that creates an empty datastructure, a function that inserts into the
 datastructure and a function that does a lookup.
 Again, functions for modifying and deleting relationships are similar to insert
 and lookup.
 
+
 %if False
 
 For debugging, it's handy to have |Show| instances.
 
 > instance Show (RelationStorage a) => Show (RelationStorageN a) where show = show . unRelationStorageN
+
 
 %endif
 

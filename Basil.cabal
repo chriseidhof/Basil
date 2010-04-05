@@ -22,13 +22,20 @@ exposed-modules:     Basil
                      Basil.Database.Relational.Entities
                      Basil.Database.Relational.Operations
                      Basil.Database.Relational.Relationships
+                     Basil.Database.Relational.Schema
+                     Basil.Database.Relational.Takusen
+                     Basil.Database.Relational.Utils
                      Basil.InMemory.Cache
                      Basil.InMemory.Interface
                      Basil.InMemory.Relations
                      Basil.InMemory.Relations.Storage
+                     Basil.Interface
+                     Basil.Query
                      Basil.References
                      Basil.Relations
                      Basil.Relations.InitialValues
+                     Basil.Relations.PList
+                     
 
 build-depends:       base >= 3 && < 5,
                      containers >= 0.2,
