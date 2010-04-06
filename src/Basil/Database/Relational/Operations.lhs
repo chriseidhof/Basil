@@ -7,18 +7,24 @@
 > import Basil.Data.TList
 > import Database.Sqlite.Enumerator
 
+> type DB = IO
+
 %endif
 
-We can now define some operations on our tables. The implementations are straightforward and can be found in the library accomplishing this thesis.
+We can now define some operations on our tables.
+The implementations are straightforward and can be found in the library accompanying this thesis. 
+All these operations are internally implemented using the |SQL| query language.
+In our current library, they only work with the \emph{sqlite3}\footnote{\url{http://sqlite.org/}} database, we plan to support more database systems in the future.
 
-> create  :: Table row -> HList row -> IO Int
-> read    :: Table row -> Int -> IO (Maybe (HList row))
-> update  :: Table row -> Int -> HList row -> IO ()
-> delete  :: Table row -> Int -> IO ()
+
+> create  :: Table env row -> HList row -> DB Int
+> read    :: Table env row -> Int -> DB (Maybe (HList row))
+> update  :: Table env row -> Int -> HList row -> DB ()
+> delete  :: Table env row -> Int -> DB ()
 
 %if False
 
-> create (nm, keys) row = do
+> create (Table nm keys) row = do
 >   let query    = createSql (nm, keys)
 >       bindVals = tableSqlValues (zipHlistWithHList2 row keys)
 >   withSession (connect "test.sqlite3") ( execDML (cmdbind query bindVals))
@@ -32,7 +38,6 @@ We can now define some operations on our tables. The implementations are straigh
 >  , parens (commaList $ tableSqlFields keys)
 >  , "VALUES"
 >  , parens (commaList $ tableSqlPlaceholders keys)
->  -- , parens (commaList $ tableSqlValues (zipHlistWithHList2 row keys))
 >  ]
 
 > read    = undefined

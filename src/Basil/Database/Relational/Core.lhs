@@ -1,6 +1,6 @@
 %if False
 
-> {-# LANGUAGE GADTs, FlexibleContexts #-}
+> {-# LANGUAGE GADTs, FlexibleContexts, EmptyDataDecls, UndecidableInstances #-}
 > 
 > module Basil.Database.Relational.Core where
 > 
@@ -9,35 +9,55 @@
 > import Database.Enumerator
 > import Database.Sqlite.Enumerator
 
+> instance Show (Base a) where
+>   show  String  = "<String>"
+>   show  Int     = "<Int>"
+>   show  Bool    = "<Bool>"
+
 %endif
 
 An attribute of a table describes its name and the domain. Because relational
 databases support only a limited number of attribute types, we define a closed
-set of types called |Base|, containing a code for every such type:
+set of types called |Base|, containing a \emph{code} for every such type:
 
 > data Base t where
 >   String  ::  Base String
 >   Int     ::  Base Int
 >   Bool    ::  Base Bool
 
-> instance Show (Base a) where
->   show String = "<String>"
->   show Int    = "<Int>"
->   show Bool   = "<Bool>"
+A simple attribute can now be modeled by taking a name and a code in |Base|
+A foreign key also requires that we have a pointer to a value in |tables|.
+The type |tables| is a type-level list of all the tables in our model.
 
-An attribute can now be modeled by taking a name and a code in |Base|:
 
-> data Attr t where
->   Attr :: String -> Base t -> Attr t
+> data Attr tables t where
+>   Attr     :: String  -> Base t       -> Attr tables t
+>   Foreign  :: String  -> Ix tables t  -> Attr tables (Foreign t)
 
-A table schema is a list of attributes. We can reuse our |TList| datatype. The
-|db| type variable is similar to |phi| in the previous sections: it is a family
-with all the tables in our database.
+%if False
 
-> type Schema db = HList2 Attr db
+> instance Show (Attr tables t) where
+>  show (Attr nm t)    = "Attr " ++ nm ++ show t
+>  show (Foreign nm f) = "Foreign " ++ nm
 
-%include CoreExample.lhs
+%endif
 
-A table is simply a schema with a name
+The |Foreign| is a type-level value to indicate that something is a foreign key.
+On the value level, a foreign key is represented as an |Int|.
 
-> type Table db = (String, Schema db)
+> newtype Foreign a = ForeignKey { foreignKey :: Int }
+
+A table schema is a list of attributes, which we can express using our |HList| datatype. Every attribute is indexed with |tables|, the list of tables in our data model.
+
+> type Schema tables atts = HList2 (Attr tables) atts
+
+A table is simply a schema with a name.
+
+> data Table tables atts = Table String (Schema tables atts)
+
+%if False
+
+> instance (Show (Schema tables atts)) => Show (Table tables atts) where
+>  show (Table t s) = show (t, show s)
+
+%endif

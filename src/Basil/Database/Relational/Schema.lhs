@@ -13,11 +13,11 @@ This module implements the code to create database schemas.
 
 %endif
 
-> createTable :: Table row -> IO ()
-> createTable (name, fields) = undefined
+> createTable :: Table env row -> IO ()
+> createTable (Table name fields) = undefined
 
-> createTableSql :: Table row -> String
-> createTableSql (name, fields) = unwords
+> createTableSql :: Table env row -> String
+> createTableSql (Table name fields) = unwords
 >    [ "CREATE TABLE"
 >    , name
 >    , "("

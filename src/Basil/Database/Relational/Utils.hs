@@ -9,19 +9,19 @@ import Database.Sqlite.Enumerator
 import Basil.Data.TList
 import Data.List (intercalate)
 
-tableSqlFields :: HList2 Attr x -> [String]
+tableSqlFields :: HList2 (Attr env) x -> [String]
 tableSqlFields = foldTList ((:) . createAttribute) []
- where createAttribute :: Attr a -> String
+ where createAttribute :: Attr env a -> String
        createAttribute (Attr nm _ ) = nm
 
-tableSqlPlaceholders :: HList2 Attr x -> [String]
+tableSqlPlaceholders :: HList2 (Attr env) x -> [String]
 tableSqlPlaceholders = foldTList ((:) . const createPlaceHolder) []
  where createPlaceHolder :: String
        createPlaceHolder = "?"
 
-tableSqlValues :: HList2 (WithMeta Attr) row -> [BindA Session PreparedStmtObj BindObj]
+tableSqlValues :: HList2 (WithMeta (Attr env)) row -> [BindA Session PreparedStmtObj BindObj]
 tableSqlValues = foldTList ((:) . createValue) []
- where createValue :: WithMeta (Attr) a -> BindA Session PreparedStmtObj BindObj
+ where createValue :: WithMeta (Attr env) a -> BindA Session PreparedStmtObj BindObj
        createValue (Combined a (Attr _ typ)) = toSql typ a
 
 parens x = "(" ++ x ++ ")"

@@ -14,8 +14,8 @@ data One
 data Many
 
 data Cardinality a where
-  One   :: Cardinality One
-  Many  :: Cardinality Many
+  One  :: Cardinality One
+  Many :: Cardinality Many
 
 class ERModel phi rels | phi -> rels, rels -> phi where
   relations :: TList4 Rel rels

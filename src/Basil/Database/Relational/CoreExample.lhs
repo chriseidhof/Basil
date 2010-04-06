@@ -14,27 +14,45 @@
 
 %endif
 
-We can now model a schema for a table |users|:
+We can now model a schema for our database. We have four tables: one for each entity and a join table that links |Person| rows to |Compiler| rows.
 
-> type UserRow = String :*: Int :*: String :*: Nil
+> type CompilerDB = CompilerRow :*: PersonRow :*: ReleaseRow :*: Contributors :*: Nil
+
+The schemas for each table are expressed on the type-level by type-level lists:
+
+> type CompilerRow    = String :*: String :*: Nil
+> type PersonRow      = String :*: String :*: String :*: Nil
+> type ReleaseRow     = Int :*: String :*: String :*: Foreign CompilerRow :*: Nil
+> type Contributors   = Foreign CompilerRow :*: Foreign PersonRow :*: Nil
+
+As an example, we can construct a |Schema| and a |Table| for the |Compiler| table:
+
+> compilerSchema :: Schema CompilerDB CompilerRow
+> compilerSchema   =     Attr "name"      String
+>                  .**.  Attr "homepage"  String
+>                  .**.  Nil2
+
+> compilerTable :: Table CompilerDB CompilerRow
+> compilerTable = Table "compilers" compilerSchema
+
+Constructing a row for the table is as easy as creating a value of type |HList CompilerRow|:
+
+> exampleCompiler :: HList CompilerRow
+> exampleCompiler = "GHC" .*. "http://haskell.org/ghc" .*. Nil
+
+Constructing the table for |Release| entities involves the use of a foreign key:
+
+> releaseTable :: Table CompilerDB ReleaseRow
+> releaseTable = Table "releases" releaseSchema
 >
-> userSchema :: Schema UserRow
-> userSchema   =   Attr "name"   String
->             .**. Attr "age"    Int   
->             .**. Attr "email"  String
->             .**. Nil2
+> releaseSchema :: Schema CompilerDB ReleaseRow
+> releaseSchema   =     Attr    "version"      Int
+>                 .**.  Attr    "date"         String
+>                 .**.  Attr    "notes"        String
+>                 .**.  Foreign "compiler_id"  Zero
+>                 .**.  Nil2
 
-> userTable :: Table UserRow
-> userTable = ("users", userSchema)
+To construct a |Release| value that refers to the |Compiler| with the primary key |42|, we define the following value:
 
-Constructing a row for the table is as easy as constructing a value of
-|UserRow|:
-
-> exampleUser :: HList UserRow
-> exampleUser = "chris" .*. 24 .*. "chris@example.com" .*. Nil
-
-
-> insertUser :: IO Int
-> insertUser = create userTable exampleUser
-
-> -- test = createTable userTable
+> exampleRelease :: HList ReleaseRow
+> exampleRelease = 612 .*. "11 Oct 2009" .*. "" .*. ForeignKey 42 .*. Nil

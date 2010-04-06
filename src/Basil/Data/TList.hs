@@ -4,6 +4,7 @@
              GADTs,
              MultiParamTypeClasses, FunctionalDependencies
              , TypeOperators, EmptyDataDecls, Rank2Types
+             , FlexibleInstances
  #-}
 module Basil.Data.TList where
 
@@ -29,6 +30,12 @@ data HList a where
 data HList2 f a where
   Nil2  :: HList2 f Nil
   Cons2 :: f a -> HList2 f b -> HList2 f (a :*: b)
+
+instance Show (HList2 f Nil) where 
+   show Nil2 = "Nil2"
+
+instance (Show (f a), Show (HList2 f b)) => Show (HList2 f (a :*: b)) where 
+   show (Cons2 a b) = "Cons2 (" ++ show a ++ ") (" ++ show b ++ ")"
 
 data Ix phi ix where
   Zero :: Ix (a :*: b) a
