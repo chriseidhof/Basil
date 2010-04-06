@@ -7,9 +7,9 @@
 
 %endif
 
-We will represent the queries above by adding a conditional expression to the
-|find| method. The |find| method always works on one entity, so we want to limit
-the conditional expression to that entity. As a first try, we could represent our |Expr| datatype like this:
+To represent queries, we introduces a new datatype |Expr| that describes the abstract syntax tree of a query.
+This gives is full flexiblity to compile queries to a variety of targets.
+The first type-argument is used to indicate the entity type, and the second argument captures the result type of the query.
 
 > data Expr entity a where
 >   Attribute  :: String -> (entity -> att)                       -> Expr entity att
@@ -19,9 +19,10 @@ the conditional expression to that entity. As a first try, we could represent ou
 >   And        :: Expr entity Bool -> Expr entity Bool            -> Expr entity Bool
 >   Not        :: Expr entity Bool                                -> Expr entity Bool
 
-Given a value of |Expr| we can calculate its value on an entity:
+Given a value of |Expr| we can calculate its value on an entity with the |eval| function. 
+We will use this function when querying the in-memory database.
 
-> eval :: Expr entity a -> entity -> a
+> eval :: Expr entity a -> (entity -> a)
 > eval (Attribute nm f)  e = f e
 > eval (Constant  c)     e = c
 > eval (Equal l r)       e = eval l e  ==  eval r e
@@ -29,7 +30,8 @@ Given a value of |Expr| we can calculate its value on an entity:
 > eval (And   l r)       e = eval l e  &&  eval r e
 > eval (Not   l)         e = not (eval l e)
 
-Alternatively, we can also build an SQL expression:
+Alternatively, we can also build an SQL expression.
+We will use this when querying the relational database.
 
 > toSql :: Expr entity a -> String
 > toSql (Attribute nm f)  = nm
@@ -45,7 +47,7 @@ Alternatively, we can also build an SQL expression:
 
 %endif
 
-Before we show how these methods work, we will define some smart constructors:
+Finally, to make the usage of our library easier, we define some operators that act as smart constructors:
 
 > infix 4 .==.
 > (.==.) :: Eq att => Expr entity att -> Expr entity att -> Expr entity Bool
