@@ -1,5 +1,6 @@
 %if False
 
+> {-# LANGUAGE RankNTypes #-}
 > module Basil.Database.Relational.Relationships where
 
 %endif
@@ -19,7 +20,7 @@ Recall the type of the |create| method:
 
 After our transformation, |env| has changed into |env'|. We need a way to change the type of |create| methods as well.
 Unfortunately, we have not yet implemented this, because we do not know the solution.
-We think that the |TTTAS| library \cite{TTTAS} provides a way to deal with this.
+We think that the |TTTAS| library \cite{tttas} provides a way to deal with this.
 
 A promising way is to group the operations |create|, |read|, |update| and |delete| into a datatype. For example:
 

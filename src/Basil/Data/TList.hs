@@ -17,11 +17,11 @@ infixr 5 .**.
 data (:*:) a b
 data Nil
 
+(.*.) :: a -> HList b -> HList (a :*: b)
 (.*.) = Cons
-(.**.) = Cons2
 
-class El phi ix where
-  proof :: Ix phi ix
+(.**.) :: f a -> HList2 f b -> HList2 f (a :*: b)
+(.**.) = Cons2
 
 data HList a where
   Nil  :: HList Nil
@@ -71,54 +71,12 @@ foldTList :: (forall ix . f ix -> r -> r)
 foldTList f r Nil2 = r
 foldTList f r (Cons2 x xs) = f x (foldTList f r xs)
 
--- fold f r [] = r
--- fold f r (x:xs) = f (f r x
-
-tMap :: (forall b. b -> f b) -> HList a -> HList2 f a
-tMap f Nil         = Nil2
-tMap f (Cons x xs) = Cons2 (f x) (tMap f xs)
-
 zipHlistWithHList2 :: HList a -> HList2 f a -> HList2 (WithMeta f) a
 zipHlistWithHList2 Nil Nil2 = Nil2
 zipHlistWithHList2 (Cons x xs) (Cons2 y ys) = Combined x y .**. zipHlistWithHList2 xs ys
 
 data WithMeta f a = Combined a (f a)
 
--- type family TList (f :: * -> *)  (phi :: * -> *) env :: *
--- type instance TList f phi () = ()
--- type instance TList f phi (x, xs) = (f x, TList f phi xs)
--- 
--- infixr .*
--- (.*) = (,)
--- 
--- lookupTList :: TIndex phi ix env
---                  -> TList f phi env
---                  -> f ix
--- lookupTList Zero = fst
--- lookupTList (Suc x) = lookupTList x . snd
--- 
--- 
--- data TIndex phi ix where
---   Zero :: TIndex phi ix (ix, env)
---   Suc  :: TIndex phi ix env' -> TIndex phi ix (b, env')
--- 
--- 
--- 
--- 
--- type family   FilterIfTypeEq x xs :: *
--- type instance FilterIfTypeEq x () = ()
--- type instance FilterIfTypeEq x (f y z, ys) = AppendIfTrue (TypeEq x y) (f y z) (FilterIfTypeEq' x (f y z, ys))
--- 
--- type family   FilterIfTypeEq' x xs :: *
--- type instance FilterIfTypeEq' x () = ()
--- type instance FilterIfTypeEq' x (f y z, ys) = AppendIfTrue (TypeEq x z) (f y z) (FilterIfTypeEq x ys)
--- 
 type family   AppendIfTrue bool x xs :: *
 type instance AppendIfTrue True x xs  = x :*: xs
 type instance AppendIfTrue False x xs = xs
--- 
--- -- TODO: following should be in a separate module.
--- class EnumTypes phi ls | phi -> ls, ls -> phi where 
---   allTypes :: Witnesses phi ls
---   index :: phi ix -> TIndex phi ix ls
--- 

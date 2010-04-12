@@ -17,14 +17,14 @@ exposed-modules:     Basil
                      Basil.Data.TBoolean
                      Basil.Data.TList
                      Basil.Data.TList4
-                     Basil.Database.Relational.Core
-                     Basil.Database.Relational.CoreExample
-                     Basil.Database.Relational.Entities
-                     Basil.Database.Relational.Operations
-                     Basil.Database.Relational.Relationships
-                     Basil.Database.Relational.Schema
-                     Basil.Database.Relational.Takusen
-                     Basil.Database.Relational.Utils
+                     -- Basil.Database.Relational.Core
+                     -- Basil.Database.Relational.CoreExample
+                     -- Basil.Database.Relational.Entities
+                     -- Basil.Database.Relational.Operations
+                     -- Basil.Database.Relational.Relationships
+                     -- Basil.Database.Relational.Schema
+                     -- Basil.Database.Relational.Takusen
+                     -- Basil.Database.Relational.Utils
                      Basil.InMemory.Cache
                      Basil.InMemory.Interface
                      Basil.InMemory.Relations
@@ -41,4 +41,5 @@ build-depends:       base >= 3 && < 5,
                      containers >= 0.2,
                      fclabels >= 0.4.2,
                      Takusen >= 0.8.6,
+                     regular,
                      monads-fd

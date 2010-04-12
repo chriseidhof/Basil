@@ -23,9 +23,9 @@ initial values for the relationships involving |r|, and stores them by applying
 |setValue| on each |InitialValue|. For example, if |r| is the |Entity| type, the
 |PList| will contain a single element with a reference to a |Compiler| value.
 
-> storeAll  ::  ERModel phi rels
->           =>  Ref phi r
->           ->  PList phi r env rels
+> storeAll  ::  ERModel entities rels
+>           =>  Ref entities r
+>           ->  PList entities r env rels
 >           ->  RelCache rels
 >           ->  RelCache rels
 > storeAll ref PNil          = id
@@ -36,9 +36,9 @@ initial value.
 Based on the direction |DL| or |DR|, stored in the |InitialValue|, it can determine the right
 order of the arguments.
 
-> setValue  ::  ERModel phi rels
->           =>  Ref phi (SourceType dir (Rel phi c1 t1 c2 t2))
->           ->  InitialValue phi r dir (Rel phi c1 t1 c2 t2) rels
+> setValue  ::  ERModel entities rels
+>           =>  Ref entities (SourceType dir (Rel entities c1 t1 c2 t2))
+>           ->  InitialValue entities r dir (Rel entities c1 t1 c2 t2) rels
 >           ->  RelCache rels
 >           ->  RelCache rels
 > setValue  x (y,DL,  ix)  = insert ix x y

@@ -41,15 +41,15 @@ expect that it will not be a problem in practice.
 \begin{figure}
 
 > type  family     RelationStorage rel :: *
-> type  instance   RelationStorage (Rel phi  One  r1  One   r2)  = 
->                  M.Map   (Ref phi r1)  (Ref phi r2)
-> type  instance   RelationStorage (Rel phi  One  r1  Many  r2)  = 
->                  M.Map   (Ref phi r2)  (Ref phi r1)
-> type  instance   RelationStorage (Rel phi  Many r1  One   r2)  = 
->                  M.Map   (Ref phi r1)  (Ref phi r2)
-> type  instance   RelationStorage (Rel phi  Many r1  Many  r2)  = 
->                  (  M.Map  (Ref phi r1  )  (S.Set (Ref phi r2))
->                  ,  M.Map  (Ref phi r2  )  (S.Set (Ref phi r1)))
+> type  instance   RelationStorage (Rel entities  One  r1  One   r2)  = 
+>                  M.Map   (Ref entities r1)  (Ref entities r2)
+> type  instance   RelationStorage (Rel entities  One  r1  Many  r2)  = 
+>                  M.Map   (Ref entities r2)  (Ref entities r1)
+> type  instance   RelationStorage (Rel entities  Many r1  One   r2)  = 
+>                  M.Map   (Ref entities r1)  (Ref entities r2)
+> type  instance   RelationStorage (Rel entities  Many r1  Many  r2)  = 
+>                  (  M.Map  (Ref entities r1  )  (S.Set (Ref entities r2))
+>                  ,  M.Map  (Ref entities r2  )  (S.Set (Ref entities r1)))
 
 \caption{The |RelationStorage| function}
 \label{tfun:RelationStorage}
@@ -72,7 +72,7 @@ add the suffix |S| to a function to indicate that we are dealing with functions
 for just one relationship set. Functions on all relationship
 sets in an ER model will not have this suffix.
 
-> emptyS :: Rel phi c1 r1 c2 r2 -> RelationStorage (Rel phi c1 r1 c2 r2)
+> emptyS :: Rel entities c1 r1 c2 r2 -> RelationStorage (Rel entities c1 r1 c2 r2)
 > emptyS (Rel  One   _  _  One   _ _) = M.empty
 > emptyS (Rel  One   _  _  Many  _ _) = M.empty
 > emptyS (Rel  Many  _  _  One   _ _) = M.empty
@@ -92,7 +92,7 @@ The |fromTList4| function is much like |map|, it lifts an |f| into a |g| structu
 that is indexed by that |f|. In the code above, the |f| is the |Rel| type and
 the |g| is the type |RelationStorageN|.
 
-> fromTList4  ::  (forall a b c d phi . f phi a b c d -> g (f phi a b c d)) 
+> fromTList4  ::  (forall a b c d entities . f entities a b c d -> g (f entities a b c d)) 
 >             ->  TList4 f rels 
 >             ->  HList (TMap g rels)
 > fromTList4 f TNil4                = Nil
@@ -109,11 +109,11 @@ relationship.
 
 \begin{figure}
 
-> insertS  ::  Ref phi l 
->          ->  Ref phi r 
->          ->  Rel phi c1 l c2 r 
->          ->  RelationStorage (Rel phi c1 l c2 r) 
->          ->  RelationStorage (Rel phi c1 l c2 r)
+> insertS  ::  Ref entities l 
+>          ->  Ref entities r 
+>          ->  Rel entities c1 l c2 r 
+>          ->  RelationStorage (Rel entities c1 l c2 r) 
+>          ->  RelationStorage (Rel entities c1 l c2 r)
 > insertS l r (Rel  One   _  _  One   _  _) s        =  M.insert l r s
 > insertS l r (Rel  One   _  _  Many  _  _) s        =  M.insert r l s
 > insertS l r (Rel  Many  _  _  One   _  _) s        =  M.insert l r s
@@ -130,10 +130,10 @@ We can now lift that function to the storage of all relationship sets in a
 model. This looks up the right |RelationStorage| datatype using the |ix| value,
 and changes it using the |insertS| function.
 
-> insert  ::  ERModel phi rels
->         =>  Ix rels (Rel phi c1 l c2 r) 
->         ->  Ref phi l 
->         ->  Ref phi r
+> insert  ::  ERModel entities rels
+>         =>  Ix rels (Rel entities c1 l c2 r) 
+>         ->  Ref entities l 
+>         ->  Ref entities r
 >         ->  RelCache rels
 >         ->  RelCache rels
 > insert ix l r =  modTList 
@@ -154,9 +154,9 @@ relationship set this will be exactly one entity. In a one-to-many relationship 
 be a list of references. Before we define |lookup|, we will express its return type using 
 the |Value| type-family:
 
-> type family    Value phi cardinality typ :: *
-> type instance  Value phi One         t   = Ref phi t
-> type instance  Value phi Many        t   = S.Set (Ref phi t)
+> type family    Value entities cardinality typ :: *
+> type instance  Value entities One         t   = Ref entities t
+> type instance  Value entities Many        t   = S.Set (Ref entities t)
 
 Now we can write the |lookupS| function that looks up all the relationships.
 Note that this function is quite inefficient for the one-to-many relationship.
@@ -164,10 +164,10 @@ Of course, the data-structures defined above could be changed to be more databas
 However, this in-memory database is just a proof of concept, and choosing highly
 efficient data-structures is beyond the scope of this thesis.
 
-> lookupS  ::  Ref phi l 
->          ->  Rel phi c1 l c2 r 
->          ->  RelationStorage (Rel phi c1 l c2 r) 
->          ->  Maybe (Value phi c2 r)
+> lookupS  ::  Ref entities l 
+>          ->  Rel entities c1 l c2 r 
+>          ->  RelationStorage (Rel entities c1 l c2 r) 
+>          ->  Maybe (Value entities c2 r)
 > lookupS l (Rel  One   _  _  One   _ _) = M.lookup l
 > lookupS l (Rel  One   _  _  Many  _ _) = Just . S.fromList . M.keys . M.filter (== l)
 > lookupS l (Rel  Many  _  _  One   _ _) = M.lookup l
@@ -177,10 +177,10 @@ Our module also provides a |lookupS'| function that works in the other direction
 of the relationship and has a very similar definition. Note that only the types
 of the |Ref| and the result value have changed:
 
-> lookupS'  ::  Ref phi r 
->           ->  Rel phi c1 l c2 r 
->           ->  RelationStorage (Rel phi c1 l c2 r) 
->           ->  Maybe (Value phi c1 l)
+> lookupS'  ::  Ref entities r 
+>           ->  Rel entities c1 l c2 r 
+>           ->  RelationStorage (Rel entities c1 l c2 r) 
+>           ->  Maybe (Value entities c1 l)
 
 %if False
 
@@ -194,20 +194,20 @@ of the |Ref| and the result value have changed:
 We can again lift both |lookupS| and |lookupS'|, which work on individual
 relationship sets, to all relationship sets in an ER model:
 
-> lookupLeft  ::  ERModel phi rels
->             =>  Ix rels (Rel phi c1 l c2 r)
->             ->  Ref phi l 
+> lookupLeft  ::  ERModel entities rels
+>             =>  Ix rels (Rel entities c1 l c2 r)
+>             ->  Ref entities l 
 >             ->  RelCache rels
->             ->  Maybe (Value phi c2 r)
+>             ->  Maybe (Value entities c2 r)
 > lookupLeft = gLookup lookupS
 
 %if False
 
-> lookupRight  ::  ERModel phi rels 
->              =>  Ix rels (Rel phi c1 l c2 r)
->              ->  Ref phi r 
+> lookupRight  ::  ERModel entities rels 
+>              =>  Ix rels (Rel entities c1 l c2 r)
+>              ->  Ref entities r 
 >              ->  RelCache rels
->              ->  Maybe (Value phi c1 l)
+>              ->  Maybe (Value entities c1 l)
 > lookupRight = gLookup lookupS'
 
 %endif
@@ -215,7 +215,7 @@ relationship sets, to all relationship sets in an ER model:
 The functions |lookupLeft| and |lookupRight| are so similar that we define a helper
 function |gLookup|, which does the heavy lifting:
 
-> gLookup  ::  ERModel phi rels
+> gLookup  ::  ERModel entities rels
 >          =>  (t -> ix -> RelationStorage ix -> c)
 >          ->  Ix rels ix
 >          ->  t
@@ -228,17 +228,17 @@ function |gLookup|, which does the heavy lifting:
 The function |lookup| dispatches to either |lookupLeft| or |lookupRight| based on the
 direction. This will become useful once we provide an interface to the user.
 
-> lookup ::    (  ERModel phi rels
+> lookup ::    (  ERModel entities rels
 >              ,  cTarget  ~ TargetCardinality dir rel
 >              ,  tTarget  ~ TargetType        dir rel
 >              ,  source   ~ SourceType        dir rel
->              ,  rel ~ (Rel phi c1 l c2 r)
+>              ,  rel ~ (Rel entities c1 l c2 r)
 >              )
 >           => Dir dir
 >           -> Ix rels rel
->           -> Ref phi source
+>           -> Ref entities source
 >           -> RelCache rels
->           -> Maybe (Value phi cTarget tTarget)
+>           -> Maybe (Value entities cTarget tTarget)
 > lookup DL = lookupLeft
 > lookup DR = lookupRight
 

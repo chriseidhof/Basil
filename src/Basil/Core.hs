@@ -14,27 +14,26 @@ data One
 data Many
 
 data Cardinality a where
-  One  :: Cardinality One
-  Many :: Cardinality Many
+  One   ::  Cardinality One
+  Many  ::  Cardinality Many
 
-class ERModel phi rels | phi -> rels, rels -> phi where
-  relations :: TList4 Rel rels
-  witnesses :: Witnesses phi phi
-
--- relationsForType :: (ERModel phi xs, TEq phi) => phi x -> TList4 Rel phi (Filter4IfTypeEq x xs)
--- relationsForType ix = filterByType ix relations
+class ERModel entities rels | entities -> rels, rels -> entities where
+  relations  ::  TList4 Rel rels
+  witnesses  ::  Witnesses entities entities
 
 
+data Rel entities cardinalityL cardinalityR l r where
+  Rel   ::  Cardinality cardinalityL 
+        ->  Ix entities l
+        ->  String
+        ->  Cardinality cardinalityR
+        ->  Ix entities r
+        ->  String
+        ->  Rel entities cardinalityL l cardinalityR r
 
-data Rel phi cardinalityL cardinalityR l r where
-  Rel  :: Cardinality cardinalityL 
-       -> Ix phi l
-       -> String
-       -> Cardinality cardinalityR
-       -> Ix phi r
-       -> String
-       -> Rel phi cardinalityL l cardinalityR r
-
+mkRelation  ::  (String, Cardinality cardinalityL, Ix entities l)
+            ->  (String, Cardinality cardinalityR, Ix entities r)
+            ->  Rel entities cardinalityL l cardinalityR r
 mkRelation (nameL, cardL, entityTypeL) (nameR, cardR, entityTypeR) = Rel cardL entityTypeL nameL cardR entityTypeR nameR
 
 
