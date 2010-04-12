@@ -34,6 +34,7 @@
 %if not query
 
 We will now combine the storage of relations and the storage of entities to build the actual in-memory database.
+The final interface is summarized in section \ref{sec:inmemif}.
 We introduce a |BasilState| datatype that stores the entities, relationships and an |Int| value.
 The |Int| value is used as a fresh-variable supply for creating new entities.
 
