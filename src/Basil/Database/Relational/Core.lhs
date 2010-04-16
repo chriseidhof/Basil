@@ -4,10 +4,7 @@
 > 
 > module Basil.Database.Relational.Core where
 > 
-> import Basil.Data.TBoolean
 > import Basil.Data.TList
-> import Database.Enumerator
-> import Database.Sqlite.Enumerator
 
 > instance Show (Base a) where
 >   show  String  = "<String>"
@@ -38,7 +35,7 @@ The type |tables| is a type-level list of all the tables in our model.
 
 > instance Show (Attr tables t) where
 >  show (Attr nm t)    = "Attr " ++ nm ++ show t
->  show (Foreign nm f) = "Foreign " ++ nm
+>  show (Foreign nm _) = "Foreign " ++ nm
 
 %endif
 

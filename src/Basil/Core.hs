@@ -7,7 +7,6 @@
 module Basil.Core where
 
 import Basil.Data.TList4
-import Basil.Data.TBoolean
 import Basil.Data.TList
 
 data One

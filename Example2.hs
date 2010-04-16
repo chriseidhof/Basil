@@ -30,8 +30,11 @@ $(mkLabels [''User, ''Post, ''Comment, ''Tag])
 --     post   Post  <> comments Comment*
 --     posts  Post* <> tags Tag*
 
+exampleUser :: String -> User
 exampleUser  n = UserC    n "test" 24
+examplePost ::  Post
 examplePost    = PostC    "fipo" "my first post"
+exampleComment :: Comment
 exampleComment = CommentC "a comment!"
 
 -- example flow
@@ -58,8 +61,8 @@ test' =
 
 -- boilerplate, will be generated using quasiquoting.
 
-parent :: Ref Blog User -> InitialValue Blog User R ((One `To` Many) User User) BlogRelationsEnum
 parent   x = (x, DR,  Suc (Suc (Suc Zero)))
+
 children x = (x, DL,  Suc (Suc (Suc Zero)))
 
 authorP x = (x, DR, Zero)

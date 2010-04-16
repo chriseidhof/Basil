@@ -6,7 +6,7 @@ The user of our library can then provide an instance for her datatype.
 
 %if False
 
-> {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts, FlexibleInstances, UndecidableInstances, TypeOperators, TypeSynonymInstances #-}
+> {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts, FlexibleInstances, UndecidableInstances, TypeOperators, TypeSynonymInstances, GADTs, ExistentialQuantification #-}
 
 > module Basil.Database.Relational.Entities where
 >
@@ -15,6 +15,8 @@ The user of our library can then provide an instance for her datatype.
 > import Generics.Regular
 > import Basil.Data.TList hiding ((:*:))
 > import qualified Basil.Data.TList as T
+> import Prelude hiding ((.), id)
+> import Control.Category
 
 
 %endif
@@ -58,7 +60,7 @@ The type parameter |f| uniquely determines the |schema|, which is expressed usin
 We ignore the constructor wrapper:
 
 > instance GSchema f schema => GSchema (C c f) schema where
->   gschema (C f) = gschema f
+>   gschema ~(C f) = gschema f
 
 In regular, the structure of a record type is encoded as nested pairs of |S| constructors. 
 The last element is simply an |S| value, there is no |Nil| terminator. Therefore, we need to provide an instance for a single |S| constructor and an instance for products of |S| constructors. Note that |:*:| is used by both |Regular| and our |HList| library.
@@ -68,10 +70,32 @@ Therefore, we prefix the our |:*:| type constructor with a |T|.
 >   gschema f = gattr f .**. Nil2
 >
 > instance     (GAttr f attr, GSchema g gSchema) 
->          =>  GSchema (f :*: g) (attr T.:*: gSchema) where
->   gschema (s :*: rest) = gattr s .**. gschema rest
+>          =>  GSchema  (f :*: g) (attr T.:*: gSchema) where
+>   gschema ~(s :*: rest) = gattr s .**. gschema rest
 
 Finally, we define a function that builds a schema after converting an |a| to its structural representation.
 
 > schema' :: (Regular a, GSchema (PF a) schema) => a -> Schema env schema
 > schema' = gschema . from
+
+> data SchemaT a = forall env schema. (Regular a, GSchema (PF a) schema) => SchemaT (Schema env schema)
+>                | forall env. RelSchemaT (Schema env a)
+
+Converting schemas for all entities
+
+> class ToSchema entities where
+>   toSchema :: HList entities -> HList2 SchemaT entities
+
+> instance ToSchema Nil where
+>   toSchema Nil = Nil2
+
+> instance (ToSchema b, Regular a, GSchema (PF a) schema) => ToSchema (a T.:*: b) where
+>   toSchema (Cons x xs) = (SchemaT $ schema' x) .**. (toSchema xs)
+
+Operations on entities:
+
+> data Operation env result where
+>   Create  :: Ix env row -> HList row  -> Operation env Int
+>   Read    :: Ix env row -> Int        -> Operation env (Maybe (HList row))
+>   Update  :: Ix env row -> Int        -> HList row -> Operation env ()
+>   Delete  :: Ix env row -> Int        -> Operation env ()

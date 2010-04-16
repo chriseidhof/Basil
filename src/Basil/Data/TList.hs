@@ -50,12 +50,14 @@ data Witnesses finalEnv env where
   WCons :: Ix finalEnv ix -> Witnesses finalEnv env -> Witnesses finalEnv (ix :*: env)
 
 lookupTList :: Ix phi ix -> HList phi -> ix
-lookupTList Zero     (Cons y ys) = y
-lookupTList (Suc x)  (Cons y ys) = lookupTList x ys
+lookupTList Zero     (Cons y _ ) = y
+lookupTList (Suc x)  (Cons _ ys) = lookupTList x ys
+lookupTList _        _           = error "lookupTList: absurd case."
 
 lookupMapTList :: Ix phi ix -> HList (TMap f phi) -> f ix
-lookupMapTList Zero     (Cons y ys) = y
-lookupMapTList (Suc x)  (Cons y ys) = lookupMapTList x ys
+lookupMapTList Zero     (Cons y _ ) = y
+lookupMapTList (Suc x)  (Cons _ ys) = lookupMapTList x ys
+lookupMapTList _        _           = error "lookupMapTList: absurd case."
 
 modTList :: (f ix -> f ix)
             -> Ix phi ix
@@ -63,17 +65,20 @@ modTList :: (f ix -> f ix)
             -> HList (TMap f phi)
 modTList f Zero    (Cons a b) = f a .*. b
 modTList f (Suc x) (Cons a b) =   a .*. modTList f x b
+modTList _ _       _          = error "modTList: absurd case."
+
 
 foldTList :: (forall ix . f ix -> r -> r)
           -> r
           -> HList2 f phi
           -> r
-foldTList f r Nil2 = r
+foldTList _ r Nil2 = r
 foldTList f r (Cons2 x xs) = f x (foldTList f r xs)
 
 zipHlistWithHList2 :: HList a -> HList2 f a -> HList2 (WithMeta f) a
 zipHlistWithHList2 Nil Nil2 = Nil2
 zipHlistWithHList2 (Cons x xs) (Cons2 y ys) = Combined x y .**. zipHlistWithHList2 xs ys
+zipHlistWithHList2 _ _ = error "zipHlistWithHList2: should not happen."
 
 data WithMeta f a = Combined a (f a)
 
