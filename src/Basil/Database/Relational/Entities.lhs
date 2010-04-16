@@ -20,8 +20,6 @@ The user of our library can then provide an instance for her datatype.
 %endif
 
 The functions in this section are defined using the \emph{Regular}\footnote{\url{http://hackage.haskell.org/package/regular}} generic programming library.
-In section \ref{sec:introgp}, we provide a short introduction to the library.
-
 To convert an entity type into a table schema we convert each individual field to an attribute.
 However, because |Attribute| types are restricted to a certain set of types (capture by the |Base| type from the previous section), we need a way to convert from and to |Base| types.
 We do this by providing a class |Representable| to convert from and to base types.
