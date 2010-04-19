@@ -43,6 +43,7 @@ The |Foreign| is a type-level value to indicate that something is a foreign key.
 On the value level, a foreign key is represented as an |Int|.
 
 > newtype Foreign a = ForeignKey { foreignKey :: Int }
+>  deriving Show
 
 A table schema is a list of attributes, which we can express using our |HList| datatype. Every attribute is indexed with |tables|, the list of tables in our data model.
 

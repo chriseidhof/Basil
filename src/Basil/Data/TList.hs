@@ -9,6 +9,7 @@
 module Basil.Data.TList where
 
 import Basil.Data.TBoolean
+import Control.Monad (liftM2)
 
 infixr 5 :*:
 infixr 5 .*.
@@ -30,6 +31,12 @@ data HList a where
 data HList2 f a where
   Nil2  :: HList2 f Nil
   Cons2 :: f a -> HList2 f b -> HList2 f (a :*: b)
+
+instance Show (HList Nil) where
+   show Nil = "Nil"
+
+instance (Show a, Show (HList as)) => Show (HList (a :*: as)) where
+   show (Cons a b) = "Cons (" ++ show a ++ ") (" ++ show b ++ ")"
 
 instance Show (HList2 f Nil) where 
    show Nil2 = "Nil2"
@@ -67,6 +74,10 @@ lookupMapTList :: Ix phi ix -> HList (TMap f phi) -> f ix
 lookupMapTList Zero     (Cons y _ ) = y
 lookupMapTList (Suc x)  (Cons _ ys) = lookupMapTList x ys
 lookupMapTList _        _           = error "lookupMapTList: absurd case."
+
+mapMHList2 :: Monad m => (forall a . f a -> m b) -> HList2 f phi -> m [b]
+mapMHList2 _ Nil2         = return []
+mapMHList2 f (Cons2 x xs) = liftM2 (:) (f x) $ mapMHList2 f xs
 
 modTList :: (f ix -> f ix)
             -> Ix phi ix

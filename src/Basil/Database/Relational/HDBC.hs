@@ -13,3 +13,4 @@ fromHDBC :: Attr env a -> SqlValue -> a
 fromHDBC (Attr _ String) = fromSql
 fromHDBC (Attr _ Int   ) = fromSql
 fromHDBC (Attr _ Bool  ) = fromSql
+fromHDBC (Foreign _ _ )  = ForeignKey . fromSql

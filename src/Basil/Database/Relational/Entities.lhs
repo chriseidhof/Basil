@@ -100,9 +100,10 @@ Finally, we define a function that builds a schema after converting an |a| to it
 >  where (Bijection l r) = gbijection
 >        bij = l . from <-> to . r
 
-> data TableT a =  forall env schema. (Regular a, GSchema (PF a) schema) 
->                  => TableT (Table env schema) (a :<->: HList schema)
->                | forall env. RelTableT (Table env a)
+> data TableT a =  forall env schema. TableT 
+>   { unTableT :: (Table env schema)
+>   , trans    :: (a :<->: HList schema)
+>   }
 
 Converting schemas for all entities
 

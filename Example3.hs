@@ -2,7 +2,7 @@
 
 module CoreData2 where
 
-import Basil hiding ((:*:), find)
+import Basil hiding ((:*:))
 import Basil.Relations.PList
 import Basil.Query
 import Data.Record.Label (mkLabels, label)
@@ -15,6 +15,8 @@ import Generics.Regular
 import qualified Basil.Data.TList as T
 import qualified Basil.Relations.InitialValues as I
 import qualified Data.Map as M
+import qualified Data.Set as S
+import Control.Monad.Trans (lift)
 
 data User    = UserC    {name :: String, password :: String, age :: Int} deriving (Show)
 data Post    = PostC    {title :: String, body :: String} deriving (Show)
@@ -52,15 +54,16 @@ exampleComment = CommentC "a comment!"
 -- example flow
 --
 
-example :: BasilDB Blog BlogRelationsEnum (Maybe User)
-example = do create ixUser (exampleUser "chris")
-             find ixUser 1
+example :: BasilDB Blog BlogRelationsEnum [Maybe Post]
+example = do createDatabase
+             let ref = Ref ixUser (Fresh 1)
+             user <- find ref
+             lift $ print $ user
+             -- new ixPost (examplePost {body = "hello, world"}) (PCons (authorP ref) PNil)
+             Just rels <- findRels DL ixAuthorPosts (Ref ixUser (Fresh 1))
+             mapM find $ S.toList rels
 
 -- boilerplate, will be generated using quasiquoting.
-
-parent   x = (x, DR,  Suc (Suc (Suc Zero)))
-
-children x = (x, DL,  Suc (Suc (Suc Zero)))
 
 authorP x = (x, DR, Zero)
 
@@ -84,29 +87,37 @@ type instance TypeEq Tag      Post    = False
 type instance TypeEq Tag      Comment = False
 type instance TypeEq Tag      Tag     = True
 
+ixUser    :: Ix Blog User
+ixPost    :: Ix Blog Post
+ixComment :: Ix Blog Comment
+ixTag     :: Ix Blog Tag
+
 ixUser    = Zero
 ixPost    = Suc (Zero)
 ixComment = Suc (Suc Zero)
 ixTag     = Suc (Suc (Suc Zero))
 
-type BlogRelationsEnum =      ((One `To` Many) User Post)
+type TAuthorPosts = (One `To` Many) User Post
+
+type BlogRelationsEnum =      TAuthorPosts
                        T.:*:  ((One `To` Many) User Comment)
                        T.:*:  ((One `To` Many) Post Comment)
-                       T.:*:  ((One `To` Many) User User)
                        T.:*:  Nil
 
 instance ERModel Blog BlogRelationsEnum where
   relations = TCons4 authorPosts 
             $ TCons4 authorComments 
             $ TCons4 postComments 
-            $ TCons4 parentChildren
             $ TNil4
   witnesses = WCons Zero (WCons (Suc Zero) (WCons (Suc (Suc Zero)) (WCons (Suc (Suc (Suc Zero))) WNil)))
+
+
+ixAuthorPosts :: Ix BlogRelationsEnum TAuthorPosts
+ixAuthorPosts = Zero
 
 
 authorPosts    = mkRelation ("author", One, ixUser)   ("posts"   , Many, ixPost)
 authorComments = mkRelation ("author", One, ixUser)   ("comments", Many, ixComment)
 postComments   = mkRelation ("post"  , One, ixPost)   ("comments", Many, ixComment)
-parentChildren = mkRelation ("parent", One, ixUser)   ("children", Many, ixUser)
 
 type To m1 m2 t1 t2 = Rel Blog m1 t1 m2 t2

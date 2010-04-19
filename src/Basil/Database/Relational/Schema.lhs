@@ -15,7 +15,6 @@ This module implements the code to create database schemas.
 
 %endif
 
-> createTableSql :: Table env row -> String
 > createTableSql (Table name fields) = unwords
 >    [ "CREATE TABLE"
 >    , name
