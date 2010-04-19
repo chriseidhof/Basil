@@ -17,7 +17,8 @@ The user of our library can then provide an instance for her datatype.
 > import qualified Basil.Data.TList as T
 > import Prelude hiding ((.), id)
 > import Control.Category
-
+> import Data.Record.Label
+> import Basil.Database.Relational.Utils
 
 %endif
 
@@ -44,58 +45,80 @@ The function |baseCode| takes an |a| parameter but never inspects it, it is ther
 To express that we can convert an |f| into an attribute, we define the class |GAttr|.
 
 > class GAttr f attr | f -> attr where
->  gattr :: f a -> Attr env attr
+>  gattr      :: f a -> Attr env attr
+>  gAttrBij   :: f a :<->: attr
 
 There is only one instance, for a record field containing type |K a|. As a constraint, we require that |a| is an instance of |Representable|.
 
 > instance (Selector s, Representable a rep) => GAttr (S s (K a)) rep where
->  gattr s = Attr (selName s) (baseCode (unK $ unS s))
+>  gattr s    = Attr (selName s) (baseCode (unK $ unS s))
+>  gAttrBij   = (toRep . unK . unS) <-> (S . K . fromRep)
 
 To derive a schema generically, we define the class |GSchema|.
 The type parameter |f| uniquely determines the |schema|, which is expressed using a functional dependency.
 
 > class GSchema f schema | f -> schema where
->  gschema :: f a -> Schema env schema
+>  gschema    :: f a -> Schema env schema
+>  gbijection :: f a :<->: HList schema
 
 We ignore the constructor wrapper:
 
 > instance GSchema f schema => GSchema (C c f) schema where
->   gschema ~(C f) = gschema f
+>   gschema ~(C f)   = gschema f
+>   gbijection       = let (Bijection l r) = gbijection
+>                      in (l . unC) <-> (C . r)
 
 In regular, the structure of a record type is encoded as nested pairs of |S| constructors. 
 The last element is simply an |S| value, there is no |Nil| terminator. Therefore, we need to provide an instance for a single |S| constructor and an instance for products of |S| constructors. Note that |:*:| is used by both |Regular| and our |HList| library.
 Therefore, we prefix the our |:*:| type constructor with a |T|.
 
 > instance (GAttr (S s f) attr) => GSchema (S s f) (attr T.:*: Nil) where
->   gschema f = gattr f .**. Nil2
+>   gschema f   = gattr f .**. Nil2
+>   gbijection  = let (Bijection l r) = gAttrBij
+>                 in (\x -> l x .*. Nil) <-> (r . hHead)
 >
 > instance     (GAttr f attr, GSchema g gSchema) 
 >          =>  GSchema  (f :*: g) (attr T.:*: gSchema) where
 >   gschema ~(s :*: rest) = gattr s .**. gschema rest
+>   gbijection = let (Bijection l r)   = gAttrBij
+>                    (Bijection l' r') = gbijection
+>                in  (\(x :*: xs) -> l x .*. l' xs) <-> (\(Cons x xs) -> r x :*: r' xs)
+
+> class GName f where
+>   gName :: f a -> String
+
+> instance (Constructor c) => GName (C c f) where
+>   gName = lower . conName
 
 Finally, we define a function that builds a schema after converting an |a| to its structural representation.
 
 > schema' :: (Regular a, GSchema (PF a) schema) => a -> Schema env schema
 > schema' = gschema . from
 
-> data SchemaT a = forall env schema. (Regular a, GSchema (PF a) schema) => SchemaT (Schema env schema)
->                | forall env. RelSchemaT (Schema env a)
+> table' :: (Regular a, GName (PF a), GSchema (PF a) schema) => a -> TableT a
+> table' x = TableT (Table (gName $ from x) $ gschema (from x)) bij
+>  where (Bijection l r) = gbijection
+>        bij = l . from <-> to . r
+
+> data TableT a =  forall env schema. (Regular a, GSchema (PF a) schema) 
+>                  => TableT (Table env schema) (a :<->: HList schema)
+>                | forall env. RelTableT (Table env a)
 
 Converting schemas for all entities
 
 > class ToSchema entities where
->   toSchema :: HList entities -> HList2 SchemaT entities
+>   toSchema :: Witnesses finalEnv entities -> HList2 TableT entities
 
 > instance ToSchema Nil where
->   toSchema Nil = Nil2
+>   toSchema WNil = Nil2
 
-> instance (ToSchema b, Regular a, GSchema (PF a) schema) => ToSchema (a T.:*: b) where
->   toSchema (Cons x xs) = (SchemaT $ schema' x) .**. (toSchema xs)
+> instance (ToSchema b, Regular a, GName (PF a), GSchema (PF a) schema) => ToSchema (a T.:*: b) where
+>   toSchema (WCons _ xs) = (table' undefined) .**. (toSchema xs)
 
 Operations on entities:
 
 > data Operation env result where
->   Create  :: Ix env row -> HList row  -> Operation env Int
->   Read    :: Ix env row -> Int        -> Operation env (Maybe (HList row))
->   Update  :: Ix env row -> Int        -> HList row -> Operation env ()
->   Delete  :: Ix env row -> Int        -> Operation env ()
+>   Create  :: Ix env ent -> ent  -> Operation env Int
+>   Read    :: Ix env ent -> Int  -> Operation env (Maybe ent)
+>   Update  :: Ix env ent -> Int  -> ent -> Operation env ()
+>   Delete  :: Ix env ent -> Int  -> Operation env ()

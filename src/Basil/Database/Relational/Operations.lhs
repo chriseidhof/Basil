@@ -1,11 +1,15 @@
 %if False
 
+> {-# LANGUAGE PackageImports #-}
+
 > module Basil.Database.Relational.Operations where
 >
 > import Basil.Database.Relational.Core
 > import Basil.Database.Relational.Utils
+> import Basil.Database.Relational.Schema
 > import Basil.Data.TList
-> import Database.Sqlite.Enumerator
+> import Database.HDBC
+> import Database.HDBC.Sqlite3 (Connection)
 
 > type DB = IO
 
@@ -17,22 +21,37 @@ All these operations are internally implemented using the |SQL| query language.
 In our current library, they only work with the \emph{sqlite3}\footnote{\url{http://sqlite.org/}} database, we plan to support more database systems in the future.
 
 
-> create  :: Table env row -> HList row -> DB Int
-> read    :: Table env row -> Int -> DB (Maybe (HList row))
-> update  :: Table env row -> Int -> HList row -> DB ()
-> delete  :: Table env row -> Int -> DB ()
+> find'   :: Connection
+>         -> Table t row
+>         -> Int
+>         -> IO (Maybe (HList row))
+> find' conn (Table nm keys) x = do
+>  let query = findSql x nm keys
+>  print query
+>  r <- quickQuery' conn query []
+>  case r of
+>   []    -> return Nothing
+>   (x:_) -> return $ Just (parseRow keys x)
 
-%if False
-
-> create (Table nm keys) row = do
->   let query    = createSql (nm, keys)
+> create' :: Connection
+>         -> Table t row
+>         -> HList row
+>         -> IO Int
+> create' conn (Table nm keys) row = do
+>   let query    = createSql nm keys
 >       bindVals = tableSqlValues (zipHlistWithHList2 row keys)
->   withSession (connect "test.sqlite3") ( execDML (cmdbind query bindVals))
->   putStrLn query
+>   print query
+>   quickQuery' conn query bindVals
+
+>   [[rowId]] <- quickQuery' conn "SELECT last_insert_rowid()" []
 >     
->   return 1
+>   return (fromSql rowId) -- TODO!
+
+> createSql :: String
+>           -> HList2 (Attr env) x
+>           -> String
 >
-> createSql (nm, keys) = unwords
+> createSql  nm keys = unwords
 >  [ "INSERT INTO "
 >  , nm
 >  , parens (commaList $ tableSqlFields keys)
@@ -40,8 +59,16 @@ In our current library, they only work with the \emph{sqlite3}\footnote{\url{htt
 >  , parens (commaList $ tableSqlPlaceholders keys)
 >  ]
 
-> read    = undefined
-> update  = undefined
-> delete  = undefined
+> findSql :: Int -> String -> HList2 (Attr env) x -> String
+> findSql x nm keys  = unwords 
+>   [ "SELECT " 
+>   , commaList (tableSqlFields keys)
+>   , "FROM"
+>   , nm
+>   , "WHERE id ="
+>   , show x
+>   ]
 
-%endif
+> -- read    = undefined
+> -- update  = undefined
+> -- delete  = undefined

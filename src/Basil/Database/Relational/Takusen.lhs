@@ -6,8 +6,6 @@
 > module Basil.Database.Relational.Takusen where
 > 
 > import Basil.Database.Relational.Core
-> import Database.Enumerator
-> import Database.Sqlite.Enumerator
 
 %endif
 

@@ -54,6 +54,15 @@ lookupTList Zero     (Cons y _ ) = y
 lookupTList (Suc x)  (Cons _ ys) = lookupTList x ys
 lookupTList _        _           = error "lookupTList: absurd case."
 
+hHead :: HList (x :*: xs) -> x
+hHead (Cons x _) = x
+hHead _          = error "hHead: absurd case."
+
+lookupHList2 :: Ix phi ix -> HList2 f phi -> f ix
+lookupHList2 Zero     (Cons2 y _ ) = y
+lookupHList2 (Suc x)  (Cons2 _ ys) = lookupHList2 x ys
+lookupHList2 _        _            = error "lookupTList: absurd case."
+
 lookupMapTList :: Ix phi ix -> HList (TMap f phi) -> f ix
 lookupMapTList Zero     (Cons y _ ) = y
 lookupMapTList (Suc x)  (Cons _ ys) = lookupMapTList x ys
