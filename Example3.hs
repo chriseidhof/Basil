@@ -3,6 +3,7 @@
 module CoreData2 where
 
 import Basil hiding ((:*:))
+import Basil.Data.TList.TH
 import Data.Record.Label (mkLabels, label)
 import Prelude hiding (log)
 import Basil.Database.Relational.Interface
@@ -16,8 +17,13 @@ data Post    = PostC    {title :: String, body :: String} deriving (Show)
 data Comment = CommentC {text :: String} deriving Show
 data Tag     = TagC     {tag :: String} deriving Show
 
-type Blog = User T.:*: Post T.:*: Comment T.:*: Tag T.:*: Nil
+$(mkTList "Blog"  [''User, ''Post, ''Comment, ''Tag])
 
+type TAuthorPosts    =  Rel Blog One  User  Many   Post
+type TAuthorComments =  Rel Blog One  User  Many   Comment
+type TPostComments   =  Rel Blog One  Post  Many   Comment
+
+$(mkTList "BlogRelationsEnum" [''TAuthorPosts, ''TAuthorComments, ''TPostComments])
 
 $(mkLabels [''User, ''Post, ''Comment, ''Tag])
 $(deriveAll ''User "PFUser")
@@ -28,14 +34,6 @@ $(deriveAll ''Comment "PFComment")
 type instance PF Comment = PFComment
 $(deriveAll ''Tag "PFTag")
 type instance PF Tag = PFTag
-
--- QuasiQuoting ideas:
---   ermodel Blog | User Post Comment Tag Nil with
---     author User  <> posts    Post*
---     author User  <> comments Comment*
---     parent User  <> children User*
---     post   Post  <> comments Comment*
---     posts  Post* <> tags Tag*
 
 exampleUser :: String -> User
 exampleUser  n = UserC    n "test" 24
@@ -53,7 +51,7 @@ example = do createDatabase
              user <- find ref
              lift $ print $ user
              -- new ixPost (examplePost {body = "hello, world"}) (PCons (authorP ref) PNil)
-             Just rels <- findRels DL ixAuthorPosts (Ref ixUser 1)
+             Just rels <- findRels DL ixTAuthorPosts (Ref ixUser 1)
              mapM find $ S.toList rels
              findAll ixPost
 
@@ -65,42 +63,6 @@ authorP x = (x, DR, Zero)
 -- age_ = Attribute "age" age
 
 
-type instance TypeEq User     User    = True 
-type instance TypeEq User     Post    = False
-type instance TypeEq User     Comment = False
-type instance TypeEq User     Tag     = False
-type instance TypeEq Post     User    = False
-type instance TypeEq Post     Post    = True 
-type instance TypeEq Post     Comment = False
-type instance TypeEq Post     Tag     = False
-type instance TypeEq Comment  User    = False
-type instance TypeEq Comment  Post    = False
-type instance TypeEq Comment  Comment = True 
-type instance TypeEq Comment  Tag     = False
-type instance TypeEq Tag      User    = False
-type instance TypeEq Tag      Post    = False
-type instance TypeEq Tag      Comment = False
-type instance TypeEq Tag      Tag     = True
-
-ixUser    :: Ix Blog User
-ixPost    :: Ix Blog Post
-ixComment :: Ix Blog Comment
-ixTag     :: Ix Blog Tag
-
-ixUser    = Zero
-ixPost    = Suc (Zero)
-ixComment = Suc (Suc Zero)
-ixTag     = Suc (Suc (Suc Zero))
-
-type TAuthorPosts    =  (One `To` Many)  User  Post
-type TAuthorComments =  (One `To` Many)  User  Comment
-type TPostComments   =  (One `To` Many)  Post  Comment
-
-type BlogRelationsEnum =      TAuthorPosts
-                       T.:*:  TAuthorComments
-                       T.:*:  TPostComments
-                       T.:*:  Nil
-
 instance ERModel Blog BlogRelationsEnum where
   relations = TCons4 authorPosts 
             $ TCons4 authorComments 
@@ -109,8 +71,8 @@ instance ERModel Blog BlogRelationsEnum where
   witnesses = WCons Zero (WCons (Suc Zero) (WCons (Suc (Suc Zero)) (WCons (Suc (Suc (Suc Zero))) WNil)))
 
 
-ixAuthorPosts :: Ix BlogRelationsEnum TAuthorPosts
-ixAuthorPosts = Zero
+-- ixAuthorPosts :: Ix BlogRelationsEnum TAuthorPosts
+-- ixAuthorPosts = Zero
 
 
 authorPosts    :: TAuthorPosts
@@ -121,4 +83,4 @@ authorComments = mkRelation ("author", One, ixUser)   ("comments", Many, ixComme
 postComments   :: TPostComments
 postComments   = mkRelation ("post"  , One, ixPost)   ("comments", Many, ixComment)
 
-type To m1 m2 t1 t2 = Rel Blog m1 t1 m2 t2
+$(mkEqualities [''User, ''Post, ''Comment, ''Tag])

@@ -15,7 +15,9 @@ hs-source-dirs:      src
 exposed-modules:     Basil
                      Basil.Core
                      Basil.Data.TBoolean
+                     Basil.Data.TBoolean.TH
                      Basil.Data.TList
+                     Basil.Data.TList.TH
                      Basil.Data.TList4
                      Basil.Database.Relational.Core
                      Basil.Database.Relational.Entities
@@ -45,4 +47,5 @@ build-depends:       base >= 3 && < 5,
                      monads-fd,
                      transformers,
                      HDBC,
-                     HDBC-sqlite3
+                     HDBC-sqlite3,
+                     template-haskell >= 2.4

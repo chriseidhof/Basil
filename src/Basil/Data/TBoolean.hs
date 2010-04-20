@@ -6,6 +6,8 @@
 
 module Basil.Data.TBoolean where
 
+import Basil.Data.TBoolean.TH
+
 -- There should be an instance for all combinations of the types in your domain.
 type family TypeEq a b ::  *
 
