@@ -102,3 +102,7 @@ We carry the |Dir| argument around explicitly so that we can pattern-match on it
 > type InitialValue entities r dir rel rels =  (  Ref entities (TargetType dir rel)
 >                                              ,  Dir dir
 >                                              ,  Ix rels rel) 
+
+> type family    Value entities cardinality typ :: *
+> type instance  Value entities One         t   = Ref entities t
+> type instance  Value entities Many        t   = S.Set (Ref entities t)

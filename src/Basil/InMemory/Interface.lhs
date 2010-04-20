@@ -16,7 +16,8 @@
 > import Basil.Query
 > import Basil.InMemory.Cache
 > import Basil.Relations
-> import Basil.Relations.PList
+> import Basil.InMemory.Relations.Storage
+> import Basil.InMemory.Relations
 > import Basil.References
 > import Basil.Data.TBoolean
 > import Basil.Data.TList (Ix, modTList, lookupTList, lookupMapTList, Witnesses)
@@ -25,7 +26,6 @@
 > import qualified Control.Monad.State as ST
 > import qualified Data.Map as M
 > import qualified Data.Set as S
-> import qualified Basil.Interface as P
 > import Data.Record.Label hiding (set)
 > import Prelude hiding (mod, lookup)
 
@@ -79,7 +79,7 @@ Finally, we return the newly created reference.
 > new tix i rels = do 
 >   freshId <- getM freshVariable
 >   modM freshVariable (+1)
->   let  ident          = Fresh freshId
+>   let  ident          = freshId
 >        ref            = Ref tix ident
 >   let  saveData       = mod  cached   (M.insert ident i)
 >   modM cache    (modTList (saveData) tix)

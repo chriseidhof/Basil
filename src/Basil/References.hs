@@ -4,7 +4,7 @@ module Basil.References where
 import Basil.Data.TList (Ix)
 
 data Ref entities a where
-  Ref :: { pr :: Ix entities a, pKey :: Ident } -> Ref entities a
+  Ref :: { pr :: Ix entities a, pKey :: Int } -> Ref entities a
 
 data RefList entities ix where
   RLNil :: RefList entities ix
@@ -18,6 +18,3 @@ instance Eq (Ref entities ix) where
 
 instance Ord (Ref entities ix) where
   compare r1 r2 = compare (pKey r1) (pKey r2)
-
-data Ident = UID UID | Fresh Int deriving (Ord, Show, Eq)
-type UID   = Int

@@ -7,7 +7,6 @@
 >
 > import Basil.Core
 > import Basil.References
-> import Basil.InMemory.Relations.Storage (Value (..)) -- TODO: wrong.
 > import Data.Record.Label
 > import Basil.Data.TList
 > import Basil.Data.TList4
@@ -53,23 +52,22 @@
 >         -> entity  
 >         -> PList entities entity (InitialValues entities entity rels rels) rels 
 >         -> BasilDB entities rels (Ref entities entity)
-> new ix row rels = do x <- fmap (Ref ix . Fresh) $ runOp $ Create ix row
+> new ix row rels = do x <- fmap (Ref ix) $ runOp $ Create ix row
 >                      storeAll x rels
 >                      return x
 
 > storeAll :: Ref entities entity
 >          -> PList entities entity env rels 
 >          -> BasilDB entities rels ()
-> storeAll r PNil         = return ()
+> storeAll _ PNil         = return ()
 > storeAll r (PCons x xs) = storeRelationship r x >> storeAll r xs
 
 > storeRelationship :: Ref entities entity 
 >                   -> InitialValue entities src dir (Rel entities c1 l c2 r) rels 
 >                   -> BasilDB entities rels ()
-> storeRelationship (Ref _ (Fresh r1)) ((Ref _ (Fresh r2)), dir, ix) = do
->  (BasilDBState conn tables liftOp liftRel) <- ST.get
+> storeRelationship (Ref _ r1) ((Ref _ r2), dir, ix) = do
+>  (BasilDBState conn tables _ liftRel) <- ST.get
 >  let tableT = lookupHList2 (liftRel ix) tables
->      rel    = lookupTList4 ix relations
 >  case (dir, tableT) of
 >    (DL, TableT table f) -> do let row = (fw f $ ForeignKey r1 .*. ForeignKey r2 .*.  Nil)
 >                               lift $ create' conn table row 
@@ -92,16 +90,16 @@
 >                      return $ BasilDBState conn tables op liftRel
  
 > find    :: Ref entities ent ->  BasilDB entities rels (Maybe ent)
-> find (Ref ix (Fresh i)) = runOp $ Read ix i
+> find (Ref ix i) = runOp $ Read ix i
 
 > update  :: Ref entities row -> row -> BasilDB entities rels ()
-> update (Ref ix (Fresh i)) r = runOp $ Update ix i r
+> update (Ref ix i) r = runOp $ Update ix i r
 
 > delete  :: Ref entities row -> BasilDB entities rels ()
-> delete (Ref ix (Fresh i)) = runOp $ Delete ix i
+> delete (Ref ix i) = runOp $ Delete ix i
 
 > findAll :: Ix entities entity -> BasilDB entities rels [(Ref entities entity, entity)]
-> findAll ix = do fmap (map (mapFst (Ref ix . Fresh))) $ runOp $ FindAll ix
+> findAll ix = do fmap (map (mapFst (Ref ix))) $ runOp $ FindAll ix
 >  where mapFst f (x,y) = (f x, y)
 
 > findRels  ::  ( cTarget  ~ TargetCardinality dir rel
@@ -113,8 +111,8 @@
 >           ->  Ix rels rel
 >           ->  Ref entities source
 >           ->  BasilDB entities rels (Maybe (Value entities cTarget tTarget))
-> findRels dir ix (Ref _ (Fresh x)) = do
->   (BasilDBState conn tables liftOp liftRel) <- ST.get
+> findRels dir ix (Ref _ x) = do
+>   (BasilDBState conn tables _ liftRel) <- ST.get
 >   let tableT = lookupHList2 (liftRel ix) tables
 >       rel    = lookupTList4 ix relations
 >       cond   = condition dir
@@ -136,26 +134,22 @@
 >                 -> Rel entities c1 l c2 r
 >                 -> [HList (Foreign l :*: Foreign r :*: Nil)]
 >                 -> (Maybe (Value entities cTarget tTarget))
-> convertResults DL  rel@(Rel One  _  _ One  ix _)  ((Cons x _         ):_) = Just (Ref ix $ Fresh $ foreignKey x)
-> convertResults DR  rel@(Rel One  ix _ One  _  _)  ((Cons _ (Cons x _)):_) = Just (Ref ix $ Fresh $ foreignKey x)
-> convertResults DL  rel@(Rel One  _  _ Many  ix _) ls  = Just $ S.fromList $
->   map (Ref ix . Fresh . foreignKey . lookupTList (Suc Zero)) ls
-> convertResults DR  rel@(Rel One  ix _ Many  _ _) (x:xs)  = Just $ 
->   (Ref ix (Fresh (foreignKey (lookupTList Zero x))))
-> convertResults DL  rel@(Rel Many  _  _ Many  ix _) ls  = Just $ S.fromList $
->   map (Ref ix . Fresh . foreignKey . lookupTList (Suc Zero)) ls
-> convertResults DR  rel@(Rel Many  ix  _ Many  _ _) ls  = Just $ S.fromList $
->   map (Ref ix . Fresh . foreignKey . lookupTList (Zero)) ls
+> convertResults DL  (Rel One  _  _ One  ix _)  ((Cons x _         ):_) = Just (Ref ix $ foreignKey x)
+> convertResults DR  (Rel One  ix _ One  _  _)  ((Cons _ (Cons x _)):_) = Just (Ref ix $ foreignKey x)
+> convertResults DL  (Rel One  _  _ Many  ix _) ls  = Just $ S.fromList $
+>   map (Ref ix . foreignKey . lookupTList (Suc Zero)) ls
+> convertResults DR  (Rel One  ix _ Many  _ _) (x:_)  = Just $ 
+>   (Ref ix (foreignKey (lookupTList Zero x)))
+> convertResults DL  (Rel Many  _  _ Many  ix _) ls  = Just $ S.fromList $
+>   map (Ref ix . foreignKey . lookupTList (Suc Zero)) ls
+> convertResults DR  (Rel Many  ix  _ Many  _ _) ls  = Just $ S.fromList $
+>   map (Ref ix . foreignKey . lookupTList (Zero)) ls
 > convertResults _   _                             _       = Nothing
 > -- convertResults DR  rel@(Rel One  ix _ Many  _  _) ((Cons _ (Cons x _)):_) = Just (Ref ix $ Fresh $ foreignKey x)
 
-convertResults dir (Rel One  _ _ Many _ _) = undefined
-convertResults dir (Rel Many _ _ One  _ _) = undefined
-convertResults dir (Rel Many _ _ Many _ _) = undefined
-
 > createDatabase :: BasilDB entities rels ()
 > createDatabase = do
->   (BasilDBState conn tables liftOp liftRel) <- ST.get
+>   (BasilDBState conn tables _ _) <- ST.get
 >   lift $ createDatabase' conn tables 
 
 > createDatabase' :: Connection -> HList2 TableT newTables -> IO ()
@@ -164,7 +158,7 @@ convertResults dir (Rel Many _ _ Many _ _) = undefined
 >   return ()
 
 > runOp :: Operation entities a -> BasilDB entities rels a
-> runOp op = do (BasilDBState conn tables liftOp liftRel) <- ST.get
+> runOp op = do (BasilDBState conn tables liftOp _) <- ST.get
 >               lift $ runTables conn tables (liftOp op)
 
 > runTables :: Connection -> HList2 TableT tables -> Operation tables r -> IO r

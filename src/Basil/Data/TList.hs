@@ -63,7 +63,6 @@ lookupTList _        _           = error "lookupTList: absurd case."
 
 hHead :: HList (x :*: xs) -> x
 hHead (Cons x _) = x
-hHead _          = error "hHead: absurd case."
 
 lookupHList2 :: Ix phi ix -> HList2 f phi -> f ix
 lookupHList2 Zero     (Cons2 y _ ) = y

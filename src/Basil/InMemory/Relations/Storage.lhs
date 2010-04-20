@@ -154,9 +154,11 @@ relationship set this will be exactly one entity. In a one-to-many relationship 
 be a list of references. Before we define |lookup|, we will express its return type using 
 the |Value| type-family:
 
-> type family    Value entities cardinality typ :: *
-> type instance  Value entities One         t   = Ref entities t
-> type instance  Value entities Many        t   = S.Set (Ref entities t)
+\begin{spec}
+type family    Value entities cardinality typ :: *
+type instance  Value entities One         t   = Ref entities t
+type instance  Value entities Many        t   = S.Set (Ref entities t)
+\end{spec}
 
 Now we can write the |lookupS| function that looks up all the relationships.
 Note that this function is quite inefficient for the one-to-many relationship.

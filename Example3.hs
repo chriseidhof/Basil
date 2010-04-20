@@ -49,11 +49,11 @@ exampleComment = CommentC "a comment!"
 
 example :: BasilDB Blog BlogRelationsEnum [(Ref Blog Post,Post)]
 example = do createDatabase
-             let ref = Ref ixUser (Fresh 1)
+             let ref = Ref ixUser 1
              user <- find ref
              lift $ print $ user
              -- new ixPost (examplePost {body = "hello, world"}) (PCons (authorP ref) PNil)
-             Just rels <- findRels DL ixAuthorPosts (Ref ixUser (Fresh 1))
+             Just rels <- findRels DL ixAuthorPosts (Ref ixUser 1)
              mapM find $ S.toList rels
              findAll ixPost
 

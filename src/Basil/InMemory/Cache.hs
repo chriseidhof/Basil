@@ -9,7 +9,9 @@ import Data.Record.Label (mkLabels, label)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-newtype TypeCache a = TypeCache {_cached :: M.Map Ident a} deriving Show
+-- todo: replace by intmap
+
+newtype TypeCache a = TypeCache {_cached :: M.Map Int a} deriving Show
 
 type Cache model = HList (TMap TypeCache model)
 
