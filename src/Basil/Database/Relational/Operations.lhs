@@ -14,6 +14,9 @@
 
 > type DB = IO
 
+> debug :: Show a => a -> IO ()
+> debug = print
+
 %endif
 
 We can now define some operations on our tables.
@@ -21,19 +24,55 @@ The implementations are straightforward and can be found in the library accompan
 All these operations are internally implemented using the |SQL| query language.
 In our current library, they only work with the \emph{sqlite3}\footnote{\url{http://sqlite.org/}} database, we plan to support more database systems in the future.
 
-> debug :: Show a => a -> IO ()
-> debug = print
+The |find'| function takes a connection, the description of a |Table| and the
+integer that corresponds to the |id| field. The result of |find'| is a row
+which has the type described by the |Table| value.
+
+> find'   ::  Connection
+>         ->  Table t row
+>         ->  Int
+>         ->  IO (Maybe (HList row))
+
+The |findAll'| function is similar to find, except that it also takes a
+condition. The condition is currently of type |Maybe String|, however, in a
+later release we will build a more type-safe variant. The result of |findAll'|
+is a list of row values with their corresponding |id|s.
+
+> findAll'  ::  Connection
+>           ->  Table t row
+>           ->  Maybe String
+>           ->  IO [(Int, HList row)]
+
+To create a new value the |create'| function is used. It takes an |HList row|
+and returns the |id| value of the newly created row.
+
+> create'  ::  Connection
+>          ->  Table t row
+>          ->  HList row
+>          ->  IO Int
+
+The function |update'| updates a |row| in a table, given the index of the row
+and the new value.
+
+> update'  ::  Connection
+>          ->  Table t row
+>          ->  Int
+>          ->  HList row
+>          ->  IO ()
+
+Finally, |createTable'| performs the creation of a |Table|. This function is
+different from the other functions: it does not manipulate data, but it creates
+(part of) the logical data model.
 
 > createTable' :: Connection -> TableT a -> IO ()
+
+%if False
+
 > createTable' conn (TableT t _) = do
 >   let query = createTableSql t
 >   putStrLn (query ++ ";")
 
 
-> findAll' :: Connection
->          -> Table t row
->          -> Maybe String
->          -> IO [(Int, HList row)]
 > findAll' conn (Table nm keys) cond = do
 >  let query = findAllSql cond nm keys
 >  debug query
@@ -41,10 +80,6 @@ In our current library, they only work with the \emph{sqlite3}\footnote{\url{htt
 >  return $ map (parseRow' keys) r
 
 
-> find'   :: Connection
->         -> Table t row
->         -> Int
->         -> IO (Maybe (HList row))
 > find' conn (Table nm keys) x = do
 >  let query = findSql (Just x) Nothing nm keys
 >  debug query
@@ -53,10 +88,6 @@ In our current library, they only work with the \emph{sqlite3}\footnote{\url{htt
 >   []    -> return Nothing
 >   (x:_) -> return $ Just (parseRow keys x)
 
-> create' :: Connection
->         -> Table t row
->         -> HList row
->         -> IO Int
 > create' conn (Table nm keys) row = do
 >   let query    = createSql nm keys
 >       bindVals = tableSqlValues (zipHlistWithHList2 row keys)
@@ -67,11 +98,6 @@ In our current library, they only work with the \emph{sqlite3}\footnote{\url{htt
 >     
 >   return (fromSql rowId) -- TODO!
 
-> update'   :: Connection
->         -> Table t row
->         -> Int
->         -> HList row
->         -> IO ()
 > update' conn (Table nm keys) x row = do
 >  let query    = updateSql x nm keys
 >      bindVals = tableSqlValues (zipHlistWithHList2 row keys)
@@ -129,6 +155,4 @@ In our current library, they only work with the \emph{sqlite3}\footnote{\url{htt
 
 > int x = "'" ++ show x ++ "'"
 
-> -- read    = undefined
-> -- update  = undefined
-> -- delete  = undefined
+%endif

@@ -22,10 +22,11 @@ set of types called |Base|, containing a \emph{code} for every such type:
 >   Int     ::  Base Int
 >   Bool    ::  Base Bool
 
-A simple attribute can now be modeled by taking a name and a code in |Base|
-A foreign key also requires that we have a pointer to a value in |tables|.
-The type |tables| is a type-level list of all the tables in our model.
-
+A simple attribute can now be modeled by taking a name and a code in |Base|,
+which is encoded using the |Attr| constructor.
+In relational databases, a \emph{foreign key} encodes a pointer to a row in a
+different table. Therefore, we also add a pointer to that table in |tables| for
+the |Foreign| constructor.
 
 > data Attr tables t where
 >   Attr     :: String  -> Base t       -> Attr tables t
@@ -43,9 +44,14 @@ The |Foreign| is a type-level value to indicate that something is a foreign key.
 On the value level, a foreign key is represented as an |Int|.
 
 > newtype Foreign a = ForeignKey { foreignKey :: Int }
+
+%if False
+
 >  deriving Show
 
-A table schema is a list of attributes, which we can express using our |HList| datatype. Every attribute is indexed with |tables|, the list of tables in our data model.
+%endif
+
+A table schema is a list of attributes, which we can express using our |HList2| datatype. Every attribute is indexed with |tables|, the list of tables in our data model.
 
 > type Schema tables atts = HList2 (Attr tables) atts
 

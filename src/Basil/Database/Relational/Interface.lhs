@@ -85,8 +85,7 @@
 >               ) 
 >            => String -> IO (BasilDBState entities rels)
 > emptyState s = let  rels    = relations :: TList4 Rel rels
->                     tables  = addRelationships (toSchema (witnesses :: Witnesses entities entities))
->                                                rels
+>                     tables  = addRelationships rels (toSchema (witnesses :: Witnesses entities entities))
 >                     op      = liftOperations rels :: Operation entities r -> Operation tables r
 >                     liftRel = unsafeCoerce              
 >                in do conn <- connectSqlite3 s 
@@ -95,11 +94,11 @@
 > find    :: Ref entities ent ->  BasilDB entities rels (Maybe ent)
 > find (Ref ix (Fresh i)) = runOp $ Read ix i
 
-> update  :: Ix entities row -> Int        -> row -> BasilDB entities rels ()
-> update ix i r = runOp $ Update ix i r
+> update  :: Ref entities row -> row -> BasilDB entities rels ()
+> update (Ref ix (Fresh i)) r = runOp $ Update ix i r
 
-> delete  :: Ix entities row -> Int        -> BasilDB entities rels ()
-> delete ix i = runOp $ Delete ix i
+> delete  :: Ref entities row -> BasilDB entities rels ()
+> delete (Ref ix (Fresh i)) = runOp $ Delete ix i
 
 > findAll :: Ix entities entity -> BasilDB entities rels [(Ref entities entity, entity)]
 > findAll ix = do fmap (map (mapFst (Ref ix . Fresh))) $ runOp $ FindAll ix

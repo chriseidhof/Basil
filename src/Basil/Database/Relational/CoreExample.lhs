@@ -6,11 +6,6 @@
 >
 > import Basil.Data.TList
 > import Basil.Database.Relational.Core
-> import Basil.Database.Relational.Operations
-> import Basil.Database.Relational.Schema
-> import Basil.Database.Relational.Takusen
-> import Database.Enumerator
-> import Database.Sqlite.Enumerator
 
 %endif
 
