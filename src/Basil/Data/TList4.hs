@@ -29,8 +29,8 @@ data TList4 (f :: * -> * -> * -> * -> * -> *) a where
 -- 
 
 lookupTList4 :: Ix rels rel -> TList4 f rels -> rel
-lookupTList4 Zero    (TCons4 x xs) = x
-lookupTList4 (Suc x) (TCons4 y ys) = lookupTList4 x ys
+lookupTList4 Zero    (TCons4 x _) = x
+lookupTList4 (Suc x) (TCons4 _ ys) = lookupTList4 x ys
 lookupTList4 _       _             = error "lookupTList4: absurd pattern."
 -- 
 -- -- Find relations in both ways (TODO: explain a bit more)

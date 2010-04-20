@@ -68,7 +68,7 @@ different from the other functions: it does not manipulate data, but it creates
 
 %if False
 
-> createTable' conn (TableT t _) = do
+> createTable' _ (TableT t _) = do
 >   let query = createTableSql t
 >   putStrLn (query ++ ";")
 
@@ -80,8 +80,8 @@ different from the other functions: it does not manipulate data, but it creates
 >  return $ map (parseRow' keys) r
 
 
-> find' conn (Table nm keys) x = do
->  let query = findSql (Just x) Nothing nm keys
+> find' conn (Table nm keys) i = do
+>  let query = findSql (Just i) Nothing nm keys
 >  debug query
 >  r <- quickQuery' conn query []
 >  case r of
@@ -101,7 +101,7 @@ different from the other functions: it does not manipulate data, but it creates
 > update' conn (Table nm keys) x row = do
 >  let query    = updateSql x nm keys
 >      bindVals = tableSqlValues (zipHlistWithHList2 row keys)
->  r <- quickQuery' conn query  bindVals
+>  quickQuery' conn query  bindVals
 >  return ()
 
 > createSql :: String
@@ -117,12 +117,12 @@ different from the other functions: it does not manipulate data, but it creates
 >  ]
 
 > findSql :: Maybe Int -> Maybe String -> String -> HList2 (Attr env) x -> String
-> findSql x cond nm keys  = unwords $
+> findSql i cond nm keys  = unwords $
 >   [ "SELECT " 
 >   , commaList (tableSqlFields keys)
 >   , "FROM"
 >   , nm
->   ] ++ whereClause x cond
+>   ] ++ whereClause i cond
 >  where
 >    whereClause (Just x) Nothing  = [ "WHERE id =" , int x ]
 >    whereClause (Just x) (Just c) = [ "WHERE id =" , int x, "AND", c]
@@ -140,6 +140,7 @@ different from the other functions: it does not manipulate data, but it creates
 >    whereClause (Just c) = [ "WHERE", c]
 >    whereClause Nothing  = []
 
+> updateSql :: Int -> String -> HList2 (Attr env) x -> String
 > updateSql x nm keys = unwords
 >  [ "UPDATE"
 >  , nm
@@ -151,8 +152,10 @@ different from the other functions: it does not manipulate data, but it creates
 >   , show x
 >  ]
 
+> assign :: String -> String -> String
 > assign x y = x ++ " = " ++ y
 
+> int :: Int -> String
 > int x = "'" ++ show x ++ "'"
 
 %endif

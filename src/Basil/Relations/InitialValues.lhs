@@ -8,10 +8,7 @@
 > import Basil.References
 > import Basil.Data.TBoolean
 > import Basil.Data.TList
-> import Basil.Data.TList4
-> import qualified Data.Map as M
 > import qualified Data.Set as S
-> import qualified Data.Maybe as Maybe
 
 
 When we create a new entity in our ER model, we want to make sure that 
