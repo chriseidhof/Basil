@@ -3,18 +3,11 @@
 module CoreData2 where
 
 import Basil hiding ((:*:))
-import Basil.Relations.PList
-import Basil.Query
 import Data.Record.Label (mkLabels, label)
 import Prelude hiding (log)
 import Basil.Database.Relational.Interface
-import Basil.Database.Relational.Entities
-import Basil.Database.Relational.Core
-import Basil.Database.Relational.Schema
 import Generics.Regular
 import qualified Basil.Data.TList as T
-import qualified Basil.Relations.InitialValues as I
-import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Monad.Trans (lift)
 
@@ -54,7 +47,7 @@ exampleComment = CommentC "a comment!"
 -- example flow
 --
 
-example :: BasilDB Blog BlogRelationsEnum [Maybe Post]
+example :: BasilDB Blog BlogRelationsEnum [(Ref Blog Post,Post)]
 example = do createDatabase
              let ref = Ref ixUser (Fresh 1)
              user <- find ref
@@ -62,12 +55,14 @@ example = do createDatabase
              -- new ixPost (examplePost {body = "hello, world"}) (PCons (authorP ref) PNil)
              Just rels <- findRels DL ixAuthorPosts (Ref ixUser (Fresh 1))
              mapM find $ S.toList rels
+             findAll ixPost
 
 -- boilerplate, will be generated using quasiquoting.
 
+authorP :: Ref Blog User -> (Ref Blog User, Dir R, Ix BlogRelationsEnum TAuthorPosts)
 authorP x = (x, DR, Zero)
 
-age_ = Attribute "age" age
+-- age_ = Attribute "age" age
 
 
 type instance TypeEq User     User    = True 
@@ -97,11 +92,13 @@ ixPost    = Suc (Zero)
 ixComment = Suc (Suc Zero)
 ixTag     = Suc (Suc (Suc Zero))
 
-type TAuthorPosts = (One `To` Many) User Post
+type TAuthorPosts    =  (One `To` Many)  User  Post
+type TAuthorComments =  (One `To` Many)  User  Comment
+type TPostComments   =  (One `To` Many)  Post  Comment
 
 type BlogRelationsEnum =      TAuthorPosts
-                       T.:*:  ((One `To` Many) User Comment)
-                       T.:*:  ((One `To` Many) Post Comment)
+                       T.:*:  TAuthorComments
+                       T.:*:  TPostComments
                        T.:*:  Nil
 
 instance ERModel Blog BlogRelationsEnum where
@@ -116,8 +113,12 @@ ixAuthorPosts :: Ix BlogRelationsEnum TAuthorPosts
 ixAuthorPosts = Zero
 
 
+authorPosts    :: TAuthorPosts
 authorPosts    = mkRelation ("author", One, ixUser)   ("posts"   , Many, ixPost)
+
+authorComments :: TAuthorComments
 authorComments = mkRelation ("author", One, ixUser)   ("comments", Many, ixComment)
+postComments   :: TPostComments
 postComments   = mkRelation ("post"  , One, ixPost)   ("comments", Many, ixComment)
 
 type To m1 m2 t1 t2 = Rel Blog m1 t1 m2 t2

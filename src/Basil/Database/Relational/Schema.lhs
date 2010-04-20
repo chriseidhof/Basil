@@ -27,3 +27,8 @@ This module implements the code to create database schemas.
 > parseRow Nil2 [] = Nil
 > parseRow (Cons2 x xs) (y:ys) = fromHDBC x y .*. parseRow xs ys
 > parseRow _ _  = error "parseRow"
+
+> parseRow' :: Schema env row -> [SqlValue] -> (Int, HList row)
+> parseRow' schema (y:ys) = (fromSql y, parseRow schema ys)
+> parseRow' _ _  = error "parseRow"
+

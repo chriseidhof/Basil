@@ -30,15 +30,15 @@ In our current library, they only work with the \emph{sqlite3}\footnote{\url{htt
 >   putStrLn (query ++ ";")
 
 
-> findAll :: Connection
->         -> Table t row
->         -> Maybe String
->         -> IO [(HList row)]
-> findAll conn (Table nm keys) cond = do
->  let query = findSql Nothing cond nm keys
+> findAll' :: Connection
+>          -> Table t row
+>          -> Maybe String
+>          -> IO [(Int, HList row)]
+> findAll' conn (Table nm keys) cond = do
+>  let query = findAllSql cond nm keys
 >  debug query
 >  r <- quickQuery' conn query []
->  return $ map (parseRow keys) r
+>  return $ map (parseRow' keys) r
 
 
 > find'   :: Connection
@@ -102,6 +102,17 @@ In our current library, they only work with the \emph{sqlite3}\footnote{\url{htt
 >    whereClause (Just x) (Just c) = [ "WHERE id =" , int x, "AND", c]
 >    whereClause Nothing  (Just c) = [ "WHERE", c]
 >    whereClause Nothing  Nothing  = []
+
+> findAllSql :: Maybe String -> String -> HList2 (Attr env) x -> String
+> findAllSql cond nm keys  = unwords $
+>   [ "SELECT " 
+>   , commaList ("id" : tableSqlFields keys)
+>   , "FROM"
+>   , nm
+>   ] ++ whereClause cond
+>  where
+>    whereClause (Just c) = [ "WHERE", c]
+>    whereClause Nothing  = []
 
 > updateSql x nm keys = unwords
 >  [ "UPDATE"

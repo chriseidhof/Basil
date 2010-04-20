@@ -119,7 +119,8 @@ Converting schemas for all entities
 Operations on entities:
 
 > data Operation env result where
->   Create  :: Ix env ent -> ent  -> Operation env Int
->   Read    :: Ix env ent -> Int  -> Operation env (Maybe ent)
->   Update  :: Ix env ent -> Int  -> ent -> Operation env ()
->   Delete  :: Ix env ent -> Int  -> Operation env ()
+>   Create   :: Ix env ent -> ent  -> Operation env Int
+>   Read     :: Ix env ent -> Int  -> Operation env (Maybe ent)
+>   Update   :: Ix env ent -> Int  -> ent -> Operation env ()
+>   Delete   :: Ix env ent -> Int  -> Operation env ()
+>   FindAll  :: Ix env ent         -> Operation env [(Int, ent)]

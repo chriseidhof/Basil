@@ -2,7 +2,8 @@
 
 > {-# LANGUAGE ScopedTypeVariables, GADTs, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances #-}
 > {-# LANGUAGE TypeOperators, Rank2Types, FlexibleContexts, TypeFamilies #-}
-> module Basil.Database.Relational.Interface where
+> module Basil.Database.Relational.Interface 
+>  (BasilDBState, BasilDB, runBasilDB, new, find, update, delete, findAll, findRels, createDatabase) where
 >
 > import Basil.Core
 > import Basil.References
@@ -100,6 +101,10 @@
 > delete  :: Ix entities row -> Int        -> BasilDB entities rels ()
 > delete ix i = runOp $ Delete ix i
 
+> findAll :: Ix entities entity -> BasilDB entities rels [(Ref entities entity, entity)]
+> findAll ix = do fmap (map (mapFst (Ref ix . Fresh))) $ runOp $ FindAll ix
+>  where mapFst f (x,y) = (f x, y)
+
 > findRels  ::  ( cTarget  ~ TargetCardinality dir rel
 >               , tTarget  ~ TargetType        dir rel
 >               , source   ~ SourceType        dir rel
@@ -115,8 +120,8 @@
 >       rel    = lookupTList4 ix relations
 >       cond   = condition dir
 >   case tableT of
->     TableT table f -> do results <- lift $ findAll conn table (Just cond)
->                          return $ convertResults dir rel (map (bw f) results)
+>     TableT table f -> do results <- lift $ findAll' conn table (Just cond)
+>                          return $ convertResults dir rel (map (bw f . snd ) results)
 >                          
 >  where condition :: Dir dir -> String
 >        condition DL = "id_1 = " ++ int x
@@ -175,5 +180,8 @@ convertResults dir (Rel Many _ _ Many _ _) = undefined
 > runTables sess tables (Update ix i row) = 
 >   case lookupHList2 ix tables of
 >     (TableT t transform)    -> update' sess t i  (fw transform row)
+> runTables sess tables (FindAll ix) = 
+>   case lookupHList2 ix tables of
+>     (TableT t transform)    -> fmap (map (fmap $ bw transform)) $ findAll' sess t Nothing
 >
 > runTables _ _ _ = error "not implemented yet."

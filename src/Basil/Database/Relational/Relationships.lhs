@@ -45,6 +45,7 @@
 > addedTable (Read   ix x)      = Read   (Suc ix) x
 > addedTable (Update ix x row)  = Update (Suc ix) x row
 > addedTable (Delete ix x)      = Delete (Suc ix) x
+> addedTable (FindAll ix)       = FindAll (Suc ix)
 
 > toTable :: Rel phi m1 x m2 y -> TableT (HList (Foreign x :*: Foreign y :*: Nil))
 > toTable (Rel cL ixL nL cR ixR nR) = TableT table bij
