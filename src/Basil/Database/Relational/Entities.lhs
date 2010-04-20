@@ -1,7 +1,7 @@
 Entity sets are naturally translated to table schemas, where every attribute in an entity set corresponds to an attribute in the table schema.
 However, as we have noted in section \ref{sec:rdbschema}, not every attribute type is supported in database schemas.
 Therefore, we provide a type-class to convert between attributes in the ER-model and attributes in a table.
-We provide default instances, and if an attribute can not be converted using the default instances, the compiler will give an error.
+We provide default instances, and if an attribute can not be converted using the default instances, the compiler gives an error.
 The user of our library can then provide an instance for her datatype.
 
 %if False
@@ -132,8 +132,8 @@ function takes a list of all the entity types, and produces an |HList2| with
 >   toSchema (WCons _ xs) = (table' undefined) .**. (toSchema xs)
 
 Finally, we define operations on entities. The operations are indexed by |env|,
-which is the type-level list of tables. In the next section, we will add
-a table for each relationship, and we will transform |Operation| values to work
+which is the type-level list of tables. In the next section, we add
+a table for each relationship, and we transform |Operation| values to work
 on the new list of tables.
 
 > data Operation env result where

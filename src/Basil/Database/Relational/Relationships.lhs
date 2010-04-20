@@ -15,7 +15,7 @@
 %endif
 
 To store relationships, we take a database schema, and add a table for each
-relationship. The table will contain a foreign key for both entities. Note that
+relationship. The table contains a foreign key for both entities. Note that
 the resulting database schema is not normalized, we leave this as future work.
 
 The |AddRelationship| type class has a parameter |rels|, which is the list of

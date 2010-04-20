@@ -35,8 +35,8 @@ role in this section, they are highlighted.
 
 A many-to-many relationship is stored as two |Map| datatypes.
 This allows for quick lookup.
-A disadvantage is that it takes more memory, but as we only store references, we
-expect that it will not be a problem in practice.
+A disadvantage is that it takes more memory, but because we only store references, we
+expect that it is not be a problem in practice.
 
 \begin{figure}
 
@@ -67,10 +67,10 @@ partially applied |type| declarations in the previous section) :
 
 > newtype RelationStorageN a = RelationStorageN { unRelationStorageN :: RelationStorage a}
 
-Given a relationship set, we can create an empty datastructure for it. We will
+Given a relationship set, we can create an empty datastructure for it. We 
 add the suffix |S| to a function to indicate that we are dealing with functions
 for just one relationship set. Functions on all relationship
-sets in an ER model will not have this suffix.
+sets in an ER model do not have this suffix.
 
 > emptyS :: Rel entities c1 r1 c2 r2 -> RelationStorage (Rel entities c1 r1 c2 r2)
 > emptyS (Rel  One   _  _  One   _ _) = M.empty
@@ -150,8 +150,8 @@ function and wraps it again:
 
 Another essential operation is |lookup|. Given a reference to an entity and a
 relationship set, we want to find all matching entities. In a one-to-one
-relationship set this will be exactly one entity. In a one-to-many relationship it will
-be a list of references. Before we define |lookup|, we will express its return type using 
+relationship set this is exactly one entity. In a one-to-many relationship it is
+a list of references. Before we define |lookup|, we express its return type using 
 the |Value| type-family:
 
 \begin{spec}
@@ -228,7 +228,7 @@ function |gLookup|, which does the heavy lifting:
 >                          .  lookupMapTList ix
 
 The function |lookup| dispatches to either |lookupLeft| or |lookupRight| based on the
-direction. This will become useful once we provide an interface to the user.
+direction. This is useful when we provide an interface to the user in section \ref{sec:inmeminterface}.
 
 > lookup ::    (  ERModel entities rels
 >              ,  cTarget  ~ TargetCardinality dir rel

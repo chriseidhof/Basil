@@ -35,7 +35,7 @@ which has the type described by the |Table| value.
 
 The |findAll'| function is similar to find, except that it also takes a
 condition. The condition is currently of type |Maybe String|, however, in a
-later release we will build a more type-safe variant. The result of |findAll'|
+later release we build a more type-safe variant. The result of |findAll'|
 is a list of row values with their corresponding |id|s.
 
 > findAll'  ::  Connection

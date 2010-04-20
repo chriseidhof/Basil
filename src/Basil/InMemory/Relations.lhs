@@ -21,7 +21,7 @@
 The function |storeAll| takes a reference to |r| and a |PList| containing the
 initial values for the relationships involving |r|, and stores them by applying
 |setValue| on each |InitialValue|. For example, if |r| is the |Entity| type, the
-|PList| will contain a single element with a reference to a |Compiler| value.
+|PList| contains a single element with a reference to a |Compiler| value.
 
 > storeAll  ::  ERModel entities rels
 >           =>  Ref entities r

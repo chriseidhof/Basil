@@ -20,7 +20,7 @@ The first type-argument is used to indicate the entity type, and the second argu
 >   Not        :: Expr entity Bool                                -> Expr entity Bool
 
 Given a value of |Expr| we can calculate its value on an entity with the |eval| function. 
-We will use this function when querying the in-memory database.
+We use this function when querying the in-memory database.
 
 > eval :: Expr entity a -> (entity -> a)
 > eval (Attribute nm f)  e = f e
@@ -31,7 +31,7 @@ We will use this function when querying the in-memory database.
 > eval (Not   l)         e = not (eval l e)
 
 Alternatively, we can also build an SQL expression.
-We will use this when querying the relational database.
+We use this when querying the relational database.
 
 > toSql :: Expr entity a -> String
 > toSql (Attribute nm f)  = nm
