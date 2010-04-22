@@ -4,7 +4,6 @@
 >              Rank2Types, GADTs #-}
 > module Basil.InMemory.Relations.Storage where
 > 
-> import Basil.InMemory.Cache
 > import Basil.Relations.InitialValues
 > import Basil.Core
 > import Basil.References
@@ -13,7 +12,6 @@
 > import qualified Data.Map as M
 > import qualified Data.Set as S
 > import qualified Data.Maybe as Maybe
-> import qualified Debug.Trace as D
 > import Prelude hiding (lookup)
 
 
@@ -25,18 +23,17 @@ This is the base module where we define how to store relationships.
 %format One  = "\mathbf{One}"
 %format Many = "\mathbf{Many}"
 
-We only consider relationships between two entities with a cardinality of
-one-to-one, one-to-many, many-to-one or many-to-many. Relationships are grouped
-into relationship sets, where all relationships are between the same entity
-types and have the same cardinality. Based on the cardinality, we can choose a
-datatype to store the relationships. We do this using a type-level function
-|RelationStorage|, defined in Figure \ref{tfun:RelationStorage}. Because |One| and |Many| play an important
-role in this section, they are highlighted.
+In this section, we store relationships in our in-memory database. 
+Because |One| and |Many| play an important role in this section, they are
+highlighted throughout the section. We start by defining the data
+structures for storing relationships. Then we define |insert| and |lookup|
+operations that add new relationships and find existing relationships.
 
-A many-to-many relationship is stored as two |Map| datatypes.
-This allows for quick lookup.
-A disadvantage is that it takes more memory, but because we only store references, we
-expect that it is not be a problem in practice.
+Based on the relationship cardinality, we can choose the right data structure.
+For example, we can store a |One| to |One| relationship in a |Map|, but for
+efficiency, we store |Many| to |Many| relationship in two |Map|s, one for each
+direction.  We choose the data structure using a type-level function
+|RelationStorage|, defined in Figure \ref{tfun:RelationStorage}.
 
 \begin{figure}
 
@@ -61,16 +58,16 @@ can apply the technique from the previous section, and build an |HList| with a
 
 > type RelCache rels = HList (TMap RelationStorageN rels)
 
-Again, |RelationStorageN| is a newtype wrapping |RelationStorage| because
-Haskell does not support partially applied type families (similar to the
-partially applied |type| declarations in the previous section) :
+The newtype |RelationStorageN| is a |newtype| wrapper around the |RelationStorage|
+type family. Unfortunately, type families can not be partially applied,
+therefore we need to use this |newtype|.
 
 > newtype RelationStorageN a = RelationStorageN { unRelationStorageN :: RelationStorage a}
 
-Given a relationship set, we can create an empty datastructure for it. We 
+Given a relationship type, we can create an empty datastructure for it. We 
 add the suffix |S| to a function to indicate that we are dealing with functions
-for just one relationship set. Functions on all relationship
-sets in an ER model do not have this suffix.
+for just one relationship type. Functions on all relationship
+types in an ER model do not have this suffix.
 
 > emptyS :: Rel entities c1 r1 c2 r2 -> RelationStorage (Rel entities c1 r1 c2 r2)
 > emptyS (Rel  One   _  _  One   _ _) = M.empty
@@ -78,34 +75,19 @@ sets in an ER model do not have this suffix.
 > emptyS (Rel  Many  _  _  One   _ _) = M.empty
 > emptyS (Rel  Many  _  _  Many  _ _) = (M.empty, M.empty)
 
-%if False
-
-We can now map over the list of all relationship sets |rels| to create an empty
-datastructure for each relationship set in the ER model. We give its type, but
-omit its definition. The |TList4| data structure is explained in section
-\ref{sec:tlist4}
+To create an empty data structure for each relation in a relationship set, we
+can map over the list of all relationship sets |rels|, and create an empty
+|RelationStorage| for each relationship type.
 
 > empty :: TList4 Rel rels -> RelCache rels
 > empty = fromTList4 (RelationStorageN . emptyS)
 
-The |fromTList4| function is much like |map|, it lifts an |f| into a |g| structure
-that is indexed by that |f|. In the code above, the |f| is the |Rel| type and
-the |g| is the type |RelationStorageN|.
-
-> fromTList4  ::  (forall a b c d entities . f entities a b c d -> g (f entities a b c d)) 
->             ->  TList4 f rels 
->             ->  HList (TMap g rels)
-> fromTList4 f TNil4                = Nil
-> fromTList4 f (TCons4 rel xs)  = f rel .*. fromTList4 f xs
-
-%endif
-
-Given two references and a relationship set we can insert the relationship into
-the |RelationStorage| for that specific relationship set. By pattern-matching on
-the cardinality inside the |Rel| datatype we provide the compiler with enough
-information to discover the type of the data-structure for that cardinality.
-Figure \ref{fun:insertS} shows the |insertS| function that creates a
-relationship.
+To create a new relationship between two entities we define a function
+|insertS| (in figure \ref{fun:insertS}), which has as its parameters references to both entities and the
+relationship type. As a result it modifies the |RelationStorage| for that
+relationship type. By pattern-matching on the relationship type and the
+cardinality we give the compiler enough information to discover the data
+structure that is used.
 
 \begin{figure}
 
@@ -126,9 +108,11 @@ relationship.
 \label{fun:insertS}
 \end{figure}
 
-We can now lift that function to the storage of all relationship sets in a
-model. This looks up the right |RelationStorage| datatype using the |ix| value,
-and changes it using the |insertS| function.
+The |insertS| function only works on the |RelationStorage| for an individual
+relationship, we now write a function |insert| that works on the |RelCache|,
+which stores a |RelationStorage| for each relationship in the ER model. It takes
+a reference to a relationship in the type-level list of all relationships and
+two references, and its result is a function that modifies the |RelCache|.
 
 > insert  ::  ERModel entities rels
 >         =>  Ix rels (Rel entities c1 l c2 r) 
@@ -148,11 +132,14 @@ function and wraps it again:
 >                       ->  RelationStorageN b
 > withRelationStorageN f = RelationStorageN . f . unRelationStorageN
 
+At this point, we can build the datatypes for storing relationships and add new
+relationships. 
+
 Another essential operation is |lookup|. Given a reference to an entity and a
-relationship set, we want to find all matching entities. In a one-to-one
-relationship set this is exactly one entity. In a one-to-many relationship it is
-a list of references. Before we define |lookup|, we express its return type using 
-the |Value| type-family:
+relationship set, we want to find all entities in matching relationships.
+In a one-to-one relationship set this results in exactly one entity.
+In a one-to-many relationship it is a list of references. To capture this in the
+type system, we define a type-level function |Value|:
 
 \begin{spec}
 type family    Value entities cardinality typ :: *
@@ -162,7 +149,6 @@ type instance  Value entities Many        t   = S.Set (Ref entities t)
 
 Now we can write the |lookupS| function that looks up all the relationships.
 Note that this function is quite inefficient for the one-to-many relationship.
-Of course, the data-structures defined above could be changed to be more database-like.
 However, this in-memory database is just a proof of concept, and choosing highly
 efficient data-structures is beyond the scope of this thesis.
 
@@ -256,6 +242,12 @@ and lookup.
 For debugging, it's handy to have |Show| instances.
 
 > instance Show (RelationStorage a) => Show (RelationStorageN a) where show = show . unRelationStorageN
+
+> fromTList4  ::  (forall a b c d entities . f entities a b c d -> g (f entities a b c d)) 
+>             ->  TList4 f rels 
+>             ->  HList (TMap g rels)
+> fromTList4 _ TNil4            = Nil
+> fromTList4 f (TCons4 rel xs)  = f rel .*. fromTList4 f xs
 
 
 %endif
