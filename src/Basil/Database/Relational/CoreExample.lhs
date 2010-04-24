@@ -9,12 +9,13 @@
 
 %endif
 
-We can now model a schema for our database. We have four tables: one for each entity and a join table that links |Person| rows to |Compiler| rows.
+We can now model an example schema for our database.
+Later, we will see to do this automatically, but it is instructive to do this by hand.
+We have four tables in our schema: one for each entity and a join table that links |Person| rows to |Compiler| rows.
+The relationship between |Release| and |Compiler| is encoded by a foreign key in the |ReleaseRow| table:
 
 > type CompilerDB = CompilerRow :*: PersonRow :*: ReleaseRow :*: Contributors :*: Nil
-
-The schemas for each table are expressed on the type-level by type-level lists:
-
+>
 > type CompilerRow    = String :*: String :*: Nil
 > type PersonRow      = String :*: String :*: String :*: Nil
 > type ReleaseRow     = Int :*: String :*: String :*: Foreign CompilerRow :*: Nil
@@ -47,7 +48,10 @@ Constructing the table for |Release| entities involves the use of a foreign key:
 >                 .**.  Foreign "compiler_id"  Zero
 >                 .**.  Nil2
 
-To construct a |Release| value that refers to the |Compiler| with the primary key |42|, we define the following value:
+To construct a |Release| value that refers to the |Compiler| with id |42|, we define the following value:
 
 > exampleRelease :: HList ReleaseRow
 > exampleRelease = 612 .*. "11 Oct 2009" .*. "" .*. ForeignKey 42 .*. Nil
+
+We have now seen how to construct a relational database schema with simple attributes and foreign keys, and how to build database schemas and rows.
+By encoding the type of the schema at the type-level, we guarantee that all rows are well-formed with respect to the schema.

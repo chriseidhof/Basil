@@ -38,5 +38,3 @@ The |SourceType| of a |Rel entities c1 t1 c2 t2| can be either |t1| or
 >         ->  PList entities  src 
 >                   (InitialValue entities src dir rel rels :*: env)
 >                   rels
-
-\todo{Give an example |Plist|} value.

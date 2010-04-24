@@ -33,21 +33,22 @@
 
 %if not query
 
-We now combine the storage of relations and the storage of entities to build the actual in-memory database.
+In this section we provide an interface for the in-memory database that can store and modify entities and relationships. 
 The final interface is summarized in section \ref{sec:inmemif}.
-We introduce a |BasilState| datatype that stores the entities, relationships and an |Int| value.
-The |Int| value is used as a fresh-variable supply for creating new entities.
+
+The datatype |BasilState| stores the entities, relationships and an |Int| value,
+which is used as a fresh-variable supply for creating new entities.
 
 > data BasilState entities rels = BasilState  
->    {  entities_       :: (Cache entities)
->    ,  relationships_  :: (RelCache rels)
+>    {  entities_       :: Cache entities
+>    ,  relationships_  :: RelCache rels
 >    ,  freshVariable_  :: Int
 >    } 
 
-We introduce a type synonym |Basil| that is a state monad with |BasilState| as its state.
+Because all operations change the |BasilState| datatype, we wrap our operations in a |State| monad:
 
-> type Basil entities rels a =   ERModel entities rels 
->                            =>  ST.State (BasilState entities rels) a
+> type Basil entities rels a  =   ERModel entities rels 
+>                             =>  ST.State (BasilState entities rels) a
 
 %if False
 
@@ -56,16 +57,21 @@ We introduce a type synonym |Basil| that is a state monad with |BasilState| as i
 
 %endif
 
-We can now define a |find| method that searches the state for the entity of type |entity|, given a reference to it.
+To find an entity we define the |find| function, which looks up the entity in the |Map| containing the entities. The result is wrapped in a |Maybe| value, because the entity might not exist in the |Map|.
+
+\label{sec:inmemfind}
 
 > find :: Ref entities entity -> Basil entities rels (Maybe entity)
 > find (Ref tix entity)  =    M.lookup entity . get cached . lookupMapTList tix
 >                        <$>  getM cache
 
+
 Creating a new entitiy is a bit more involved.
 Not only do we ask for a value of |entity|, but also for all its |InitialValues| (see section \ref{sec:initialvalues}).
 This way, we make sure that all the necessary relationships are added.
 For example, the |new| function for the |Release| entity also asks for a |PList| that contains a |Compiler| entity.
+
+\label{sec:inmemnew}
 
 > new  ::  Ix entities entity
 >      ->  entity 
@@ -77,16 +83,17 @@ We then store the entity, and relationships.
 Finally, we return the newly created reference.
 
 > new tix i rels = do 
->   freshId <- getM freshVariable
+>   ident <- getM freshVariable
 >   modM freshVariable (+1)
->   let  ident          = freshId
->        ref            = Ref tix ident
->   let  saveData       = mod  cached   (M.insert ident i)
+>   let  ref            = Ref tix ident
+>        saveData       = mod  cached   (M.insert ident i)
 >   modM cache    (modTList (saveData) tix)
 >   modM relCache (storeAll ref rels)
 >   return ref
 
-To lookup the relationships for an entity and a relationship set, we provide the |findRels| function, which is defined in terms of the |lookup| function from section \ref{sec:inmemrels}.
+\label{sec:inmemfindrels}
+
+To lookup the relationships for an entity and a relationship set, we provide the |findRels| function, which is defined in terms of the |lookup| function from section \ref{sec:inmemrels}. Based on the |TargetCardinality|, it can return a normal value or a |Set| with all references.
 
 > findRels  ::  ( cTarget  ~ TargetCardinality dir rel
 >               , tTarget  ~ TargetType        dir rel
@@ -100,12 +107,6 @@ To lookup the relationships for an entity and a relationship set, we provide the
 > findRels dir ix ref = lookup dir ix ref <$> getM relCache
 
 
-Finally, we can provide a |runBasil| method that executes an in-memory database expression, which yields an |a| and the resulting state, given an initial state.
-
-> runBasil  ::  ERModel entities rels
->           =>  Basil entities rels a 
->           ->  (a, BasilState entities rels)
-> runBasil comp = ST.runState comp emptyBasilState
 
 The |emptyBasilState| constructs an empty state for an ER-models.
 The explicit |forall| quantification is used in combination with the ScopedTypeVariables language extension in order to bring the |entities| and |rels| type variables into scope.
@@ -117,6 +118,13 @@ The explicit |forall| quantification is used in combination with the ScopedTypeV
 >                                (empty (relations :: TList4 Rel rels))
 >                                0
 >                                )
+
+Finally, the |runBasil| method executes an in-memory database expression, yielding an |a| and the resulting state.
+
+> runBasil  ::  ERModel entities rels
+>           =>  Basil entities rels a 
+>           ->  (a, BasilState entities rels)
+> runBasil comp = ST.runState comp emptyBasilState
 
 %if False
 
@@ -130,13 +138,14 @@ Also, to continue with a non-empty state:
 
 %endif
 
-We now have achieved the goals stated in the introduction of this section: we can store and find both entities and relationships, while maintaining the soundness of the relationship sets.
+We have now defined an interface to the in-memory database that can create and find entities and relationships.
+When creating an entity, it is guaranteed that the initial relationships have to be supplied. 
 
 %endif
 
 %if query
 
-Querying the database is comparable to |find|, defined in section \ref{sec:inmeminterface}. The function |query| looks up the map with entities, filters the map by |cond| and finally converts it into a list. The function |eval| is used to compile the |Expr| value into a Haskell function with type |entity -> Bool|.
+Querying the database is comparable to |find|, defined in section \ref{sec:inmeminterface}. The function |query| looks up the map with entities, filters the map by |cond| and finally converts it into a list. The function |eval| is used to compile the |Expr| value into a Haskell function with type |entity -> Bool|. For relational databases, we provide the same interface.
 
 > query :: Ix entities entity -> Expr entity Bool -> Basil entities rels [(Ref entities entity, entity)]
 > query tix cond  =  let look  =  mapFst (Ref tix) 

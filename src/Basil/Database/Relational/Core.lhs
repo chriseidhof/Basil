@@ -22,11 +22,11 @@ set of types called |Base|, containing a \emph{code} for every such type:
 >   Int     ::  Base Int
 >   Bool    ::  Base Bool
 
-A simple attribute can now be modeled by taking a name and a code in |Base|,
-which is encoded using the |Attr| constructor.
-In relational databases, a \emph{foreign key} encodes a pointer to a row in a
-different table. Therefore, we also add a pointer to that table in |tables| for
-the |Foreign| constructor.
+To model an attribute we define a datatype |Attr|, with two constructors.
+The |Attr| constructor encodes a simple attribute by taking a name and a code in |Base|.
+The |Foreign| constructor encodes a special attribute: a \emph{foreign key}.
+In relational databases, a \emph{foreign key} is a pointer to a row in a
+different table.
 
 > data Attr tables t where
 >   Attr     :: String  -> Base t       -> Attr tables t
@@ -40,8 +40,8 @@ the |Foreign| constructor.
 
 %endif
 
-The |Foreign| is a type-level value to indicate that something is a foreign key.
-On the value level, a foreign key is represented as an |Int|.
+The |Foreign| datatype is used to store foreign keys.
+It provides a |ForeignKey| constructor that wraps an integer.
 
 > newtype Foreign a = ForeignKey { foreignKey :: Int }
 
@@ -51,13 +51,17 @@ On the value level, a foreign key is represented as an |Int|.
 
 %endif
 
-A table schema is a list of attributes, which we can express using our |HList2| datatype. Every attribute is indexed with |tables|, the list of tables in our data model.
+A table schema is a list of attributes, which we can express using our |HList2| datatype.
+Every attribute is indexed with |tables|, the list of tables in our data model.
+This way, we can ensure that foreign keys can only refer to a table in |tables|.
 
 > type Schema tables atts = HList2 (Attr tables) atts
 
 A table is simply a schema with a name.
 
-> data Table tables atts = Table String (Schema tables atts)
+> data Table tables atts = Table  {  tableName    ::  String
+>                                 ,  tableSchema  ::  Schema tables atts
+>                                 } 
 
 %if False
 

@@ -16,8 +16,10 @@
 
 To store relationships, we take a database schema, and add a table for each
 relationship. The table contains a foreign key for both entities. Note that
-the resulting database schema is not normalized, we leave this as future work.
+the resulting database schema is not normalized, this is future work.
+Schema normalization can be seen as a transformation, and can probably be expressed using the TTTAS library \cite{tttas}.
 
+To encode relationships as database tables, we first define the |AdddRelationship| typeclass.
 The |AddRelationship| type class has a parameter |rels|, which is the list of
 relationships. Furthermore, it has two parameters |tables| and |newTables|,
 which state that, given a list of |rels|, it converts a database schema with

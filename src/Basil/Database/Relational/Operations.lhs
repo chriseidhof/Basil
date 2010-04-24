@@ -19,10 +19,11 @@
 
 %endif
 
-We can now define some operations on our tables.
+Now we will define some operations on the tables. We will define operations for finding, creating, updating and deleting rows in a table.
 The implementations are straightforward and can be found in the library accompanying this thesis. 
-All these operations are internally implemented using the |SQL| query language.
-In our current library, they only work with the \emph{sqlite3}\footnote{\url{http://sqlite.org/}} database, we plan to support more database systems in the future.
+All these operations are internally implemented using the untyped |SQL| query language. By providing a typed interface, it is guaranteed that no invalid |SQL| queries are constructed.
+
+Our current library only supports the \emph{sqlite3}\footnote{\url{http://sqlite.org/}} database, but we plan to support more database systems in the future.
 
 The |find'| function takes a connection, the description of a |Table| and the
 integer that corresponds to the |id| field. The result of |find'| is a row
@@ -62,9 +63,13 @@ and the new value.
 
 Finally, |createTable'| performs the creation of a |Table|. This function is
 different from the other functions: it does not manipulate data, but it creates
-(part of) the logical data model.
+the SQL schema for a table.
+When creating a new application, this function can be used to generate the database schema:
 
 > createTable' :: Connection -> TableT a -> IO ()
+
+At this point, we have created a way to model relational database schemas and have described the interface for creating and modifying data in the database. 
+The next step is to use the encoding of the ER model to generate these schemas automatically, and provide an interface to the database that guarantees the constraints encoded in the ER model.
 
 %if False
 

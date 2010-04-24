@@ -11,16 +11,18 @@
 > import qualified Data.Set as S
 
 
-When we create a new entity in our ER model, we want to make sure that 
-the initial relationships are also set. For a to-many relationship, we 
-don't need any initial values, but for a to-one relationship it is essential.
-This module calculates what those initial relationships are.
-
 %endif
 
+When we create a new entity, we guarantee that all the corresponding
+relationships are initialized. For example, in our compilers ER model, whenever
+we create a new |Release| entity, we guarantee that a relationship between
+|Compiler| and |Release| is added, because the relationship set
+\relationship{releases} describes that every |Release| should be related to
+exactly one |Compiler|. 
+
 First, we introduce the notion of direction in a relationship. Consider the
-relationship set |Rel entities One User Many Comment|. We can derive two functions
-from this relationship set: the first function maps a |User| to many
+relationship type |Rel entities One User Many Comment|. We can derive two functions
+from this relationship type: the first function maps a |User| to many
 |Comment|s. The other function maps a |Comment| to exactly one |User|. We
 distinguish between these two functions with the types |L| and |R|, respectively.
 
@@ -30,8 +32,9 @@ distinguish between these two functions with the types |L| and |R|, respectively
 >   DL :: Dir L
 >   DR :: Dir R
 
-Given a relationship and a direction we can compute both the source and target
-(or: domain and codomain) of such a function:
+Given a relationship and a direction we can compute both the source and target types
+of such a derived function. Also, we can compute the target cardinality.
+This is all done on the type-level:
 
 > type family SourceType dir rel :: *
 > type instance SourceType L  (Rel entities c1 t1 c2 t2) = t1
@@ -100,6 +103,10 @@ We carry the |Dir| argument around explicitly so that we can pattern-match on it
 >                                              ,  Dir dir
 >                                              ,  Ix rels rel) 
 
+%if False
+
 > type family    Value entities cardinality typ :: *
 > type instance  Value entities One         t   = Ref entities t
 > type instance  Value entities Many        t   = S.Set (Ref entities t)
+
+%endif

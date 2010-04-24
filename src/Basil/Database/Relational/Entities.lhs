@@ -1,8 +1,8 @@
 Entity sets are naturally translated to table schemas, where every attribute in an entity set corresponds to an attribute in the table schema.
 However, as we have noted in section \ref{sec:rdbschema}, not every attribute type is supported in database schemas.
 Therefore, we provide a type-class to convert between attributes in the ER-model and attributes in a table.
-We provide default instances, and if an attribute can not be converted using the default instances, the compiler gives an error.
-The user of our library can then provide an instance for her datatype.
+We give default instances, and if an attribute can not be converted using the default instances, the compiler displays an error message.
+The user of our library can then provide an instance for her datatype that converts to one of the base attribute types.
 
 %if False
 
@@ -37,11 +37,16 @@ The function |baseCode| takes an |a| parameter but never inspects it: it is ther
 > instance Representable Bool   Bool   where baseCode   _ = Bool;   toRep = id; fromRep = id
 
 %endif
-The functions in this section are defined using the \emph{Regular}\footnote{\url{http://hackage.haskell.org/package/regular}} generic programming library.
+
+To translate entities into table schemas we use generic programming \todo{references}.
+The functions in this section are defined using the \emph{Regular} generic programming library. 
+We refer to the library homepage\footnote{\url{http://hackage.haskell.org/package/regular}}
+for documentation on how to write generic functions using Regular.
 
 To express that we can convert an |f| into an attribute, we define the class
 |GAttr|. It has a function |gattr| that builds the desired attribute. The |f a|
-is again a value to convince the type checker. The function |gattrBij| is a
+is again a value to convince the type checker, and is never inspected.
+The function |gattrBij| is a
 bijection between entity attribute values |f a| and table attribute values
 |attr|.
 
@@ -61,10 +66,11 @@ using a functional dependency. The |gschema| value builds a schema (without
 inspecting |f a|), and the |gbijection| provides a bijection between |f a|
 values and |HList schema| values. We can use the |gbijection| function to
 convert between entities and table rows (in both directions).
+We omit the instances, they can be found in the code accompanying this thesis.
 
 > class GSchema f schema | f -> schema where
->  gschema    :: f a -> Schema env schema
->  gbijection :: f a :<->: HList schema
+>  gschema     :: f a -> Schema env schema
+>  gbijection  :: f a :<->: HList schema
 
 %if False
 
@@ -99,11 +105,11 @@ Therefore, we prefix the our |:*:| type constructor with a |T|.
 %endif
 
 We define a datatype |TableT| that describes simple tables. It is indexed by
-|a|, which means it can transform |a| values into |schema| values (and back).
+|a|, which means it can transform |a| values into |schema| values, and back.
 
 > data TableT a =  forall env schema. TableT 
->   { unTableT :: (Table env schema)
->   , trans    :: (a :<->: HList schema)
+>   { unTableT  :: Table env schema
+>   , trans     :: a :<->: HList schema
 >   }
 
 %if False
@@ -125,16 +131,20 @@ function takes a list of all the entity types, and produces an |HList2| with
 > class ToSchema entities where
 >   toSchema :: Witnesses finalEnv entities -> HList2 TableT entities
 
+%if False
+
 > instance ToSchema Nil where
 >   toSchema WNil = Nil2
 
 > instance (ToSchema b, Regular a, GName (PF a), GSchema (PF a) schema) => ToSchema (a T.:*: b) where
 >   toSchema (WCons _ xs) = (table' undefined) .**. (toSchema xs)
 
-Finally, we define operations on entities. The operations are indexed by |env|,
-which is the type-level list of tables. In the next section, we add
-a table for each relationship, and we transform |Operation| values to work
-on the new list of tables.
+%endif
+
+Finally, we define operations on entities.
+Instead of defining them as functions, we define them as a datatypes.
+This allows us to modify them when needed.
+The operations are indexed by |env|, which is the type-level list of tables.
 
 > data Operation env result where
 >   Create   :: Ix env ent -> ent  -> Operation env Int
@@ -142,3 +152,6 @@ on the new list of tables.
 >   Update   :: Ix env ent -> Int  -> ent -> Operation env ()
 >   Delete   :: Ix env ent -> Int  -> Operation env ()
 >   FindAll  :: Ix env ent         -> Operation env [(Int, ent)]
+
+At this point, we have seen how to automatically translate entities into relational database tables.
+In the next section, we add a table for each relationship, and we transform |Operation| values to work on the new list of tables.
