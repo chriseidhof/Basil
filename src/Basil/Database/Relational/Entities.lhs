@@ -23,7 +23,7 @@ The user of our library can then provide an instance for her datatype that conve
 %endif
 
 We provide default instances for the |Base| types |Bool|, |String| and |Int|.
-The function |baseCode| takes an |a| parameter but never inspects it: it is there to convince the type checker that we use the right instance of |Representable|.
+The function |baseCode| takes an |a| parameter but never inspects it: it is there to convince the type checker that we use the right instance of |Representable|:
 
 > class Representable a rep | a -> rep where
 >   baseCode     :: a -> Base rep
@@ -38,17 +38,17 @@ The function |baseCode| takes an |a| parameter but never inspects it: it is ther
 
 %endif
 
-To translate entities into table schemas we use generic programming \todo{references}.
-The functions in this section are defined using the \emph{Regular} generic programming library. 
+To translate entities into table schemas we use generic programming.
+The functions in this section are based upon the \emph{Regular} generic programming library. 
 We refer to the library homepage\footnote{\url{http://hackage.haskell.org/package/regular}}
 for documentation on how to write generic functions using Regular.
 
-To express that we can convert an |f| into an attribute, we define the class
+To express that we can convert a value of type |f| into an attribute, we define the class
 |GAttr|. It has a function |gattr| that builds the desired attribute. The |f a|
 is again a value to convince the type checker, and is never inspected.
 The function |gattrBij| is a
 bijection between entity attribute values |f a| and table attribute values
-|attr|.
+|attr|:
 
 > class GAttr f attr | f -> attr where
 >  gattr      :: f a -> Attr env attr

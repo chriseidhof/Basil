@@ -23,15 +23,15 @@ This is the base module where we define how to store relationships.
 %format One  = "\mathbf{One}"
 %format Many = "\mathbf{Many}"
 
-In this section, we store relationships in our in-memory database. 
+In this section, we show how relationships are represented in our in-memory database. 
 Because |One| and |Many| play an important role in this section, they are
 highlighted throughout the section. We start by defining the data
-structures for storing relationships. Then we define |insert| and |lookup|
+structures which store relationships. Then we define |insert| and |lookup|
 operations that add new relationships and find existing relationships.
 
-Based on the relationship cardinality, we can choose the right data structure.
-For example, we can store a |One| to |One| relationship in a |Map|, but for
-efficiency, we store |Many| to |Many| relationship in two |Map|s, one for each
+Based on the relationship cardinality, we choose the right data structure.
+For example, we store a |One| to |One| relationship in a |Map|, and for
+efficiency reasons we store a |Many| to |Many| relationship in two |Map|s, one for each
 direction.  We choose the data structure using a type-level function
 |RelationStorage|, defined in Figure \ref{tfun:RelationStorage}.
 
@@ -52,22 +52,23 @@ direction.  We choose the data structure using a type-level function
 \label{tfun:RelationStorage}
 \end{figure}
 
-All our relationship types |rels| are stored as a type-level list. Therefore, we
-can apply the technique from the previous section, and build an |HList| with a
+The newtype |RelationStorageN| is a |newtype| wrapper around the |RelationStorage|
+type family. Unfortunately, type families can not be partially applied,
+therefore we need to use this |newtype|:
+
+> newtype RelationStorageN a = RelationStorageN { unRelationStorageN :: RelationStorage a}
+
+All our relationship types |rels| are encoded in a type-level list. Therefore, we
+apply the technique from the previous section, and build an |HList| with a
 |RelationStorageN| datatype for each relationship type. 
 
 > type RelCache rels = HList (TMap RelationStorageN rels)
 
-The newtype |RelationStorageN| is a |newtype| wrapper around the |RelationStorage|
-type family. Unfortunately, type families can not be partially applied,
-therefore we need to use this |newtype|.
-
-> newtype RelationStorageN a = RelationStorageN { unRelationStorageN :: RelationStorage a}
-
-Given a relationship type, we can create an empty datastructure for it. We 
+From a relationship type, we create an empty datastructure that stores
+relationship values. We 
 add the suffix |S| to a function to indicate that we are dealing with functions
-for just one relationship type. Functions on all relationship
-types in an ER model do not have this suffix.
+for a specific relationship type.
+Functions that operate on the list of all relationship types in an ER model do not have this suffix.
 
 > emptyS :: Rel entities c1 r1 c2 r2 -> RelationStorage (Rel entities c1 r1 c2 r2)
 > emptyS (Rel  One   _  _  One   _ _) = M.empty
@@ -76,7 +77,7 @@ types in an ER model do not have this suffix.
 > emptyS (Rel  Many  _  _  Many  _ _) = (M.empty, M.empty)
 
 To create an empty data structure for each relation in a relationship set, we
-can map over the list of all relationship sets |rels|, and create an empty
+map over the list of all relationship sets |rels|, and create an empty
 |RelationStorage| for each relationship type.
 
 > empty :: TList4 Rel rels -> RelCache rels
@@ -84,8 +85,8 @@ can map over the list of all relationship sets |rels|, and create an empty
 
 To create a new relationship between two entities we define a function
 |insertS| (in figure \ref{fun:insertS}), which has as its parameters references to both entities and the
-relationship type. As a result it modifies the |RelationStorage| for that
-relationship type. By pattern-matching on the relationship type and the
+relationship type to which the relationship belongs. As a result it modifies the |RelationStorage| for that
+relationship type. By pattern-matching on the relationship type and its
 cardinality we give the compiler enough information to discover the data
 structure that is used.
 
@@ -137,8 +138,8 @@ relationships.
 
 Another essential operation is |lookup|. Given a reference to an entity and a
 relationship set, we want to find all entities in matching relationships.
-In a one-to-one relationship set this results in exactly one entity.
-In a one-to-many relationship it is a list of references. To capture this in the
+In a to-one relationship set this results in exactly one entity.
+In a to-many relationship it is a list of references. To capture this in the
 type system, we define a type-level function |Value|:
 
 \begin{spec}
@@ -147,7 +148,7 @@ type instance  Value entities One         t   = Ref entities t
 type instance  Value entities Many        t   = S.Set (Ref entities t)
 \end{spec}
 
-Now we can write the |lookupS| function that looks up all the relationships.
+Now we write the |lookupS| function that looks up all the relationships.
 Note that this function is quite inefficient for the one-to-many relationship.
 However, this in-memory database is just a proof of concept, and choosing highly
 efficient data-structures is beyond the scope of this thesis.
@@ -179,17 +180,19 @@ of the |Ref| and the result value have changed:
 
 %endif
 
-We can again lift both |lookupS| and |lookupS'|, which work on individual
-relationship sets, to all relationship sets in an ER model:
+We again lift both |lookupS| and |lookupS'|, which work on individual
+relationship sets, to all relationship sets in an ER model. These functions are
+called |lookupLeft| and |lookupRight|. The type of |lookupLeft| is:
 
 > lookupLeft  ::  ERModel entities rels
 >             =>  Ix rels (Rel entities c1 l c2 r)
 >             ->  Ref entities l 
 >             ->  RelCache rels
 >             ->  Maybe (Value entities c2 r)
-> lookupLeft = gLookup lookupS
 
 %if False
+
+> lookupLeft = gLookup lookupS
 
 > lookupRight  ::  ERModel entities rels 
 >              =>  Ix rels (Rel entities c1 l c2 r)
@@ -230,7 +233,7 @@ direction. This is useful when we provide an interface to the user in section \r
 > lookup DL = lookupLeft
 > lookup DR = lookupRight
 
-We now have defined a basic interface for storing relationships. We have built a
+We now defined a basic interface for storing relationships. We built a
 function that creates an empty datastructure, a function that inserts into the
 datastructure and a function that does a lookup.
 Again, functions for modifying and deleting relationships are similar to insert

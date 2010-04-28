@@ -19,7 +19,7 @@ relationship. The table contains a foreign key for both entities. Note that
 the resulting database schema is not normalized, this is future work.
 Schema normalization can be seen as a transformation, and can probably be expressed using the TTTAS library \cite{tttas}.
 
-To encode relationships as database tables, we first define the |AdddRelationship| typeclass.
+To encode relationships as database tables, we define the |AdddRelationship| typeclass.
 The |AddRelationship| type class has a parameter |rels|, which is the list of
 relationships. Furthermore, it has two parameters |tables| and |newTables|,
 which state that, given a list of |rels|, it converts a database schema with
@@ -32,6 +32,9 @@ operation on the original |tables| to an operation on the |newTables|.
 >                     ->  HList2 TableT tables 
 >                     ->  HList2 TableT newTables
 >   liftOperations :: TList4 Rel rels -> Operation tables r -> Operation newTables r
+
+We have given instances for the |AddRelationship| type class for both the |Nil|
+and |:*:| types, which means that we can convert all lists of relationships.
 
 
 %if False

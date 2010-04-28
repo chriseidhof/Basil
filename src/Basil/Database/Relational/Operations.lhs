@@ -61,7 +61,7 @@ and the new value.
 >          ->  HList row
 >          ->  IO ()
 
-Finally, |createTable'| performs the creation of a |Table|. This function is
+Finally, |createTable'| creates a |Table|. This function is
 different from the other functions: it does not manipulate data, but it creates
 the SQL schema for a table.
 When creating a new application, this function can be used to generate the database schema:

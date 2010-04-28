@@ -114,8 +114,8 @@ The explicit |forall| quantification is used in combination with the ScopedTypeV
 > emptyBasilState :: forall entities rels . 
 >                    ERModel entities rels 
 >                 => BasilState entities rels
-> emptyBasilState = (BasilState  (emptyState (witnesses :: Witnesses entities entities)) 
->                                (empty (relations :: TList4 Rel rels))
+> emptyBasilState = (BasilState  (emptyState  (witnesses :: Witnesses entities entities)) 
+>                                (empty       (relations :: TList4 Rel rels))
 >                                0
 >                                )
 

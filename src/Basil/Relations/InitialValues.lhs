@@ -18,7 +18,7 @@ relationships are initialized. For example, in our compilers ER model, whenever
 we create a new |Release| entity, we guarantee that a relationship between
 |Compiler| and |Release| is added, because the relationship set
 \relationship{releases} describes that every |Release| should be related to
-exactly one |Compiler|. 
+a single |Compiler|. 
 
 First, we introduce the notion of direction in a relationship. Consider the
 relationship type |Rel entities One User Many Comment|. We can derive two functions
@@ -48,7 +48,7 @@ This is all done on the type-level:
 > type instance TargetCardinality L  (Rel entities c1 t1 c2 t2) = c2
 > type instance TargetCardinality R  (Rel entities c1 t1 c2 t2) = c1
 
-When we create a new entity we want to store the initial relationships. We 
+When we create a new entity we need to store the initial relationships. We 
 find those initial relationships by 
 building a filter function on the type-level. We filter out all the 
 to-one relationship sets that apply to the given entity type.
@@ -76,7 +76,14 @@ direction of the relationship matches.
 >   InitialValues' entities r (Rel entities c1 from Many to :*: xs) o
 
 However, when we find a to-one relationship we include it in our |InitialValues| if 
-the types |r| and |from| are equal, using the type-level functions |AppendIfTrue| and  |TypeEq|.
+the types |r| and |from| are equal, using the type-level functions
+|AppendIfTrue| and  |TypeEq|. The |TypeEq| function compares two types and
+returns |True| if the types are equal, and |False| otherwise. The |AppendIfTrue|
+function takes three parameters: the first parameter is a boolean expression (at
+the type-level), the second parameter is an element and the third parameter is a
+list. If the first parameter is true, it returns a new list that combines the
+second parameter and the third parameter. If the first parameter is false, the
+result is the third parameter.
 We also encode the direction |L| in which it was found.
 
 > type instance InitialValues entities r (Rel entities c1 from One  to :*: xs) o = 

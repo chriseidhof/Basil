@@ -31,7 +31,9 @@ As an example, we can construct a |Schema| and a |Table| for the |Compiler| tabl
 > compilerTable :: Table CompilerDB CompilerRow
 > compilerTable = Table "compilers" compilerSchema
 
-Constructing a row for the table is as easy as creating a value of type |HList CompilerRow|:
+Constructing a row for the table is as easy as creating a value of type |HList
+CompilerRow|. Note that the type enforces that the row matches exactly the
+schema |CompilerRow|:
 
 > exampleCompiler :: HList CompilerRow
 > exampleCompiler = "GHC" .*. "http://haskell.org/ghc" .*. Nil
