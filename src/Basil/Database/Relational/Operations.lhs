@@ -23,7 +23,7 @@ Now we will define some operations on the tables. We will define operations for 
 The implementations are straightforward and can be found in the library accompanying this thesis. 
 All these operations are internally implemented using the untyped |SQL| query language. By providing a typed interface, it is guaranteed that no invalid |SQL| queries are constructed.
 
-Our current library only supports the \emph{sqlite3}\footnote{\url{http://sqlite.org/}} database, but we plan to support more database systems in the future.
+Our current library only supports the \emph{sqlite3}\cite{sqlite} database, but we plan to support more database systems in the future.
 
 The |find'| function takes a connection, the description of a |Table| and the
 integer that corresponds to the |id| field. The result of |find'| is a row

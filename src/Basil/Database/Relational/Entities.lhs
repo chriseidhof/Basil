@@ -39,8 +39,8 @@ The function |baseCode| takes an |a| parameter but never inspects it: it is ther
 %endif
 
 To translate entities into table schemas we use generic programming.
-The functions in this section are based upon the \emph{Regular} generic programming library. 
-We refer to the library homepage\footnote{\url{http://hackage.haskell.org/package/regular}}
+The functions in this section are based upon the \emph{regular} generic programming library. 
+We refer to the library homepage \cite{regular}
 for documentation on how to write generic functions using Regular.
 
 To express that we can convert a value of type |f| into an attribute, we define the class
