@@ -10,7 +10,7 @@
 %endif
 
 We can now model an example schema for our database.
-Later, we will see to do this automatically, but it is instructive to do this by hand.
+Later, we show how to do this automatically, but it is instructive to do this by hand.
 We have four tables in our schema: one for each entity and a join table that links |Person| rows to |Compiler| rows.
 The relationship between |Release| and |Compiler| is encoded by a foreign key in the |ReleaseRow| table:
 

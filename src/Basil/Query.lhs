@@ -63,4 +63,4 @@ Finally, we provide smart constructors to make the usage of our library easier:
  
 We have now defined a simple query language that can be used to construct queries on entities.
 We compile queries to both Haskell functions and |SQL| expressions.
-We will continue by constructing some example queries.
+We continue by constructing some example queries.

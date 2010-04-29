@@ -19,7 +19,7 @@
 
 %endif
 
-Now we will define some operations on the tables. We will define operations for finding, creating, updating and deleting rows in a table.
+Now we define some operations on tables: for finding, creating, updating and deleting rows.
 The implementations are straightforward and can be found in the library accompanying this thesis. 
 All these operations are internally implemented using the untyped |SQL| query language. By providing a typed interface, it is guaranteed that no invalid |SQL| queries are constructed.
 
