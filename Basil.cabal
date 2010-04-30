@@ -16,9 +16,9 @@ exposed-modules:     Basil
                      Basil.Core
                      Basil.Data.TBoolean
                      Basil.Data.TBoolean.TH
-                     Basil.Data.TList
-                     Basil.Data.TList.TH
-                     Basil.Data.TList4
+                     Basil.Data.HList
+                     Basil.Data.HList.TH
+                     Basil.Data.HList4
                      Basil.Database.Relational.Core
                      Basil.Database.Relational.Entities
                      Basil.Database.Relational.HDBC

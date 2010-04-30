@@ -6,8 +6,8 @@
 > import Basil.Database.Relational.Entities
 >
 > import Generics.Regular
-> import Basil.Data.TList hiding ((:*:))
-> import qualified Basil.Data.TList as T
+> import Basil.Data.HList hiding ((:*:))
+> import qualified Basil.Data.HList as T
 
 > data Compiler = Compiler { name :: String}
 

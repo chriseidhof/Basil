@@ -6,7 +6,7 @@
 
 > import Basil.Core
 > import Basil.Relations.InitialValues
-> import Basil.Data.TList
+> import Basil.Data.HList
 
 %endif
 

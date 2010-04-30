@@ -6,8 +6,8 @@
 
 module Basil.Core where
 
-import Basil.Data.TList4
-import Basil.Data.TList
+import Basil.Data.HList4
+import Basil.Data.HList
 
 data One
 data Many
@@ -17,7 +17,7 @@ data Cardinality a where
   Many  ::  Cardinality Many
 
 class ERModel entities rels | entities -> rels, rels -> entities where
-  relations  ::  TList4 Rel rels
+  relations  ::  HList4 Rel rels
   witnesses  ::  Witnesses entities entities
 
 

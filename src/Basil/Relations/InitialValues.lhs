@@ -1,20 +1,17 @@
 > {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types, GADTs, EmptyDataDecls ,
 >              TypeOperators #-}
+
 > module Basil.Relations.InitialValues where
 >
 > import Basil.Core
 > import Basil.References
 > import Basil.Data.TBoolean
-> import Basil.Data.TList
+> import Basil.Data.HList
 > import qualified Data.Set as S
 
 
 When we create a new entity, we guarantee that all the corresponding
-relationships are initialized. For example, in our compilers ER model, whenever
-we create a new |Release| entity, we guarantee that a relationship between
-|Compiler| and |Release| is added, because the relationship set
-\relationship{releases} describes that every |Release| should be related to
-a single |Compiler|. 
+relationships are initialized.
 
 First, we introduce the notion of direction in a relationship. Consider the
 relationship type |Rel entities One User Many Comment|. We can derive two functions

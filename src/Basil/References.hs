@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs, KindSignatures #-}
 module Basil.References where
 
-import Basil.Data.TList (Ix)
+import Basil.Data.HList (Ix)
 
 data Ref entities a where
   Ref :: { pr :: Ix entities a, pKey :: Int } -> Ref entities a

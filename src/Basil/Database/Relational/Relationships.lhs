@@ -6,8 +6,8 @@
 > module Basil.Database.Relational.Relationships where
 >
 > import Basil.Core
-> import Basil.Data.TList
-> import Basil.Data.TList4
+> import Basil.Data.HList
+> import Basil.Data.HList4
 > import Basil.Database.Relational.Core
 > import Basil.Database.Relational.Entities
 > import Data.Record.Label
@@ -28,10 +28,10 @@ new list of tables, it also provides a function |liftOperations| that lifts an
 operation on the original |tables| to an operation on the |newTables|. 
 
 > class AddRelationship rels tables newTables | rels tables -> newTables where
->   addRelationships  ::  TList4 Rel rels 
+>   addRelationships  ::  HList4 Rel rels 
 >                     ->  HList2 TableT tables 
 >                     ->  HList2 TableT newTables
->   liftOperations :: TList4 Rel rels -> Operation tables r -> Operation newTables r
+>   liftOperations :: HList4 Rel rels -> Operation tables r -> Operation newTables r
 
 We have given instances for the |AddRelationship| type class for both the |Nil|
 and |:*:| types, which means that we can convert all lists of relationships.

@@ -1,4 +1,4 @@
-module Basil.Data.TList.TH where
+module Basil.Data.HList.TH where
 
 import Control.Monad
 import Language.Haskell.TH.Syntax

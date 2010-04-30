@@ -2,8 +2,8 @@
 module Basil.Database.InMemory.Cache (EntityCache, Cache, emptyState, cached) where
 
 import Basil.Core
-import Basil.Data.TList4
-import Basil.Data.TList
+import Basil.Data.HList4
+import Basil.Data.HList
 import Basil.References
 import Data.Record.Label 
 import qualified Data.IntMap as M

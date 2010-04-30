@@ -6,7 +6,7 @@
              , TypeOperators, EmptyDataDecls, Rank2Types
              , FlexibleInstances
  #-}
-module Basil.Data.TList where
+module Basil.Data.HList where
 
 import Basil.Data.TBoolean
 import Control.Monad (liftM2)
@@ -57,25 +57,25 @@ data Witnesses finalEnv env where
 hHead :: HList (x :*: xs) -> x
 hHead (Cons x _) = x
 
-hTail :: HList (x :*: xs) -> xs
+hTail :: HList (x :*: xs) -> HList xs
 hTail (Cons _ xs) = xs
 
 -- Looking up in lists
 
-lookupTList :: Ix phi ix -> HList phi -> ix
-lookupTList Zero     (Cons y _ ) = y
-lookupTList (Suc x)  (Cons _ ys) = lookupTList x ys
-lookupTList _        _           = error "lookupTList: absurd case."
+lookupHList :: Ix phi ix -> HList phi -> ix
+lookupHList Zero     (Cons y _ ) = y
+lookupHList (Suc x)  (Cons _ ys) = lookupHList x ys
+lookupHList _        _           = error "lookupHList: absurd case."
 
 lookupHList2 :: Ix phi ix -> HList2 f phi -> f ix
 lookupHList2 Zero     (Cons2 y _ ) = y
 lookupHList2 (Suc x)  (Cons2 _ ys) = lookupHList2 x ys
-lookupHList2 _        _            = error "lookupTList: absurd case."
+lookupHList2 _        _            = error "lookupHList: absurd case."
 
-lookupMapTList :: Ix phi ix -> HList (TMap f phi) -> f ix
-lookupMapTList Zero     (Cons y _ ) = y
-lookupMapTList (Suc x)  (Cons _ ys) = lookupMapTList x ys
-lookupMapTList _        _           = error "lookupMapTList: absurd case."
+lookupMapHList :: Ix phi ix -> HList (TMap f phi) -> f ix
+lookupMapHList Zero     (Cons y _ ) = y
+lookupMapHList (Suc x)  (Cons _ ys) = lookupMapHList x ys
+lookupMapHList _        _           = error "lookupMapHList: absurd case."
 
 -- Mapping lists
 mapMHList2 :: Monad m => (forall a . f a -> m b) -> HList2 f phi -> m [b]
@@ -84,22 +84,22 @@ mapMHList2 f (Cons2 x xs) = liftM2 (:) (f x) $ mapMHList2 f xs
 
 -- Modifying a list at the position given by the |Ix|
 
-modTList :: (f ix -> f ix)
+modHList :: (f ix -> f ix)
             -> Ix phi ix
             -> HList (TMap f phi)
             -> HList (TMap f phi)
-modTList f Zero    (Cons a b) = f a .*. b
-modTList f (Suc x) (Cons a b) =   a .*. modTList f x b
-modTList _ _       _          = error "modTList: absurd case."
+modHList f Zero    (Cons a b) = f a .*. b
+modHList f (Suc x) (Cons a b) =   a .*. modHList f x b
+modHList _ _       _          = error "modHList: absurd case."
 
 -- Folding a list
 
-foldTList :: (forall ix . f ix -> r -> r)
+foldHList :: (forall ix . f ix -> r -> r)
           -> r
           -> HList2 f phi
           -> r
-foldTList _ r  Nil2         = r
-foldTList f r  (Cons2 x xs) = f x (foldTList f r xs)
+foldHList _ r  Nil2         = r
+foldHList f r  (Cons2 x xs) = f x (foldHList f r xs)
 
 -- Zipping an |HList| with an |HList2|:
 

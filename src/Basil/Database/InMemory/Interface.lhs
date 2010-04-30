@@ -18,8 +18,8 @@
 > import Basil.Database.InMemory.Relations
 > import Basil.References
 > import Basil.Data.TBoolean
-> import Basil.Data.TList (Ix, modTList, lookupTList, lookupMapTList, Witnesses)
-> import Basil.Data.TList4
+> import Basil.Data.HList 
+> import Basil.Data.HList4
 > import Control.Applicative hiding (empty)
 > import qualified Control.Monad.State as ST
 > import qualified Data.Map as M
@@ -57,7 +57,7 @@ To find an entity we define the |find| function, which looks up the entity in th
 \label{sec:inmemfind}
 
 > find :: Ref entities entity -> Basil entities rels (Maybe entity)
-> find (Ref tix entity)  =    I.lookup entity . get cached . lookupMapTList tix
+> find (Ref tix entity)  =    I.lookup entity . get cached . lookupMapHList tix
 >                        <$>  getM cache
 
 
@@ -82,7 +82,7 @@ Finally, we return the newly created reference.
 >   modM freshVariable (+1)
 >   let  ref            = Ref tix ident
 >        saveData       = mod  cached   (I.insert ident i)
->   modM cache    (modTList (saveData) tix)
+>   modM cache    (modHList (saveData) tix)
 >   modM relCache (storeAll ref rels)
 >   return ref
 
@@ -110,7 +110,7 @@ The explicit |forall| quantification is used in combination with the ScopedTypeV
 >                    ERModel entities rels 
 >                 => BasilState entities rels
 > emptyBasilState = (BasilState  (emptyState  (witnesses :: Witnesses entities entities)) 
->                                (empty       (relations :: TList4 Rel rels))
+>                                (empty       (relations :: HList4 Rel rels))
 >                                0
 >                                )
 
@@ -146,7 +146,7 @@ Querying the database is comparable to |find|, defined in section \ref{sec:inmem
 > query tix cond  =  let look  =  mapFst (Ref tix) 
 >                              .  I.toList 
 >                              .  I.filter (eval cond) 
->                              .  get cached . lookupMapTList tix
+>                              .  get cached . lookupMapHList tix
 >                     in look <$> getM cache
 
 
@@ -159,7 +159,7 @@ Querying the database is comparable to |find|, defined in section \ref{sec:inmem
 > findAll :: Ix entities entity -> Basil entities rels [(Ref entities entity, entity)]
 > findAll tix  =  let look  =  mapFst (Ref tix) 
 >                         .  I.toList 
->                         .  get cached . lookupMapTList tix
+>                         .  get cached . lookupMapHList tix
 >                in look <$> getM cache
 
 > mapFst f = map (\(x,y) -> (f x, y))

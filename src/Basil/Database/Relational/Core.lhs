@@ -4,7 +4,7 @@
 > 
 > module Basil.Database.Relational.Core where
 > 
-> import Basil.Data.TList
+> import Basil.Data.HList
 
 > instance Show (Base a) where
 >   show  String  = "<String>"

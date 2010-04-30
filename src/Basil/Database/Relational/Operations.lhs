@@ -8,7 +8,7 @@
 > import Basil.Database.Relational.Utils
 > import Basil.Database.Relational.Schema
 > import Basil.Database.Relational.Entities
-> import Basil.Data.TList
+> import Basil.Data.HList
 > import Database.HDBC
 > import Database.HDBC.Sqlite3 (Connection)
 

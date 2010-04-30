@@ -4,7 +4,7 @@
 >
 > module Basil.Database.Relational.CoreExample where
 >
-> import Basil.Data.TList
+> import Basil.Data.HList
 > import Basil.Database.Relational.Core
 
 %endif

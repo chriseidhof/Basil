@@ -7,8 +7,8 @@
 > import Basil.Relations.InitialValues
 > import Basil.Core
 > import Basil.References
-> import Basil.Data.TList
-> import Basil.Data.TList4
+> import Basil.Data.HList
+> import Basil.Data.HList4
 > import qualified Data.Map as M
 > import qualified Data.Set as S
 > import qualified Data.Maybe as Maybe
@@ -80,8 +80,8 @@ To create an empty data structure for each relation in a relationship set, we
 map over the list of all relationship sets |rels|, and create an empty
 |RelationStorage| for each relationship type.
 
-> empty :: TList4 Rel rels -> RelCache rels
-> empty = fromTList4 (RelationStorageN . emptyS)
+> empty :: HList4 Rel rels -> RelCache rels
+> empty = fromHList4 (RelationStorageN . emptyS)
 
 To create a new relationship between two entities we define a function
 |insertS| (in figure \ref{fun:insertS}), which has as its parameters references to both entities and the
@@ -121,8 +121,8 @@ two references, and its result is a function that modifies the |RelCache|.
 >         ->  Ref entities r
 >         ->  RelCache rels
 >         ->  RelCache rels
-> insert ix l r =  modTList 
->                  ( withRelationStorageN (insertS l r (lookupTList4 ix relations)) )
+> insert ix l r =  modHList 
+>                  ( withRelationStorageN (insertS l r (lookupHList4 ix relations)) )
 >                  ix
 
 The helper function |withRelationStorageN| unwraps the newtype, applies the
@@ -212,9 +212,9 @@ function |gLookup|, which does the heavy lifting:
 >          ->  t
 >          ->  HList (TMap RelationStorageN rels)
 >          ->  c
-> gLookup lookupFunc ix r  =  lookupFunc r (lookupTList4 ix relations) 
+> gLookup lookupFunc ix r  =  lookupFunc r (lookupHList4 ix relations) 
 >                          .  unRelationStorageN 
->                          .  lookupMapTList ix
+>                          .  lookupMapHList ix
 
 The function |lookup| dispatches to either |lookupLeft| or |lookupRight| based on the
 direction. This is useful when we provide an interface to the user in section \ref{sec:inmeminterface}.
@@ -246,11 +246,11 @@ For debugging, it's handy to have |Show| instances.
 
 > instance Show (RelationStorage a) => Show (RelationStorageN a) where show = show . unRelationStorageN
 
-> fromTList4  ::  (forall a b c d entities . f entities a b c d -> g (f entities a b c d)) 
->             ->  TList4 f rels 
+> fromHList4  ::  (forall a b c d entities . f entities a b c d -> g (f entities a b c d)) 
+>             ->  HList4 f rels 
 >             ->  HList (TMap g rels)
-> fromTList4 _ TNil4            = Nil
-> fromTList4 f (TCons4 rel xs)  = f rel .*. fromTList4 f xs
+> fromHList4 _ TNil4            = Nil
+> fromHList4 f (TCons4 rel xs)  = f rel .*. fromHList4 f xs
 
 
 %endif

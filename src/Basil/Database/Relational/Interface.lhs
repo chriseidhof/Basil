@@ -8,8 +8,8 @@
 > import Basil.Core
 > import Basil.References
 > import Data.Record.Label
-> import Basil.Data.TList
-> import Basil.Data.TList4
+> import Basil.Data.HList
+> import Basil.Data.HList4
 > import Basil.Database.Relational.Core
 > import Basil.Database.Relational.Entities
 > import Basil.Database.Relational.Relationships
@@ -82,7 +82,7 @@
 >               , AddRelationship rels entities tables
 >               ) 
 >            => String -> IO (BasilDBState entities rels)
-> emptyState s = let  rels    = relations :: TList4 Rel rels
+> emptyState s = let  rels    = relations :: HList4 Rel rels
 >                     tables  = addRelationships rels (toSchema (witnesses :: Witnesses entities entities))
 >                     op      = liftOperations rels :: Operation entities r -> Operation tables r
 >                     liftRel = unsafeCoerce              
@@ -114,7 +114,7 @@
 > findRels dir ix (Ref _ x) = do
 >   (BasilDBState conn tables _ liftRel) <- ST.get
 >   let tableT = lookupHList2 (liftRel ix) tables
->       rel    = lookupTList4 ix relations
+>       rel    = lookupHList4 ix relations
 >       cond   = condition dir
 >   case tableT of
 >     TableT table f -> do results <- lift $ findAll' conn table (Just cond)
@@ -137,13 +137,13 @@
 > convertResults DL  (Rel One  _  _ One  ix _)  ((Cons x _         ):_) = Just (Ref ix $ foreignKey x)
 > convertResults DR  (Rel One  ix _ One  _  _)  ((Cons _ (Cons x _)):_) = Just (Ref ix $ foreignKey x)
 > convertResults DL  (Rel One  _  _ Many  ix _) ls  = Just $ S.fromList $
->   map (Ref ix . foreignKey . lookupTList (Suc Zero)) ls
+>   map (Ref ix . foreignKey . lookupHList (Suc Zero)) ls
 > convertResults DR  (Rel One  ix _ Many  _ _) (x:_)  = Just $ 
->   (Ref ix (foreignKey (lookupTList Zero x)))
+>   (Ref ix (foreignKey (lookupHList Zero x)))
 > convertResults DL  (Rel Many  _  _ Many  ix _) ls  = Just $ S.fromList $
->   map (Ref ix . foreignKey . lookupTList (Suc Zero)) ls
+>   map (Ref ix . foreignKey . lookupHList (Suc Zero)) ls
 > convertResults DR  (Rel Many  ix  _ Many  _ _) ls  = Just $ S.fromList $
->   map (Ref ix . foreignKey . lookupTList (Zero)) ls
+>   map (Ref ix . foreignKey . lookupHList (Zero)) ls
 > convertResults _   _                             _       = Nothing
 > -- convertResults DR  rel@(Rel One  ix _ Many  _  _) ((Cons _ (Cons x _)):_) = Just (Ref ix $ Fresh $ foreignKey x)
 

@@ -11,7 +11,7 @@ This module implements the code to create database schemas.
 > import Basil.Database.Relational.HDBC
 > import Data.List (intercalate)
 > import Database.HDBC
-> import Basil.Data.TList
+> import Basil.Data.HList
 
 %endif
 

@@ -13,12 +13,12 @@ The user of our library can then provide an instance for her datatype that conve
 > import Basil.Database.Relational.Core
 > import Basil.Database.Relational.Utils
 >
-> import Basil.Data.TList hiding ((:*:))
+> import Basil.Data.HList hiding ((:*:))
 > import Control.Category
 > import Data.Record.Label
 > import Generics.Regular
 > import Prelude hiding ((.), id)
-> import qualified Basil.Data.TList as T
+> import qualified Basil.Data.HList as T
 
 %endif
 
