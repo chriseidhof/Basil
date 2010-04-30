@@ -4,7 +4,17 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Basil.Data.TBoolean where
+module Basil.Data.TBoolean (
+ module Basil.Data.TBoolean.TH,
+ TypeEq,
+ TBool (..),
+ True,
+ False,
+ TEq,
+ tOr,
+ Or
+
+) where
 
 import Basil.Data.TBoolean.TH
 
