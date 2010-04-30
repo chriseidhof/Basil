@@ -1,5 +1,3 @@
-%if False
-
 > {-# LANGUAGE ScopedTypeVariables
 >            , FlexibleContexts
 >            , Rank2Types
@@ -9,13 +7,13 @@
 >            , TypeFamilies
 >            #-}
 > module Basil.Database.InMemory.Interface (runBasil, contBasil, find, findAll, new, findRels,
->   query, attr, {- getRelation, setRelation, -} Basil (), BasilState,
+>   query, attr, Basil (), BasilState,
 >   emptyBasilState) where
 > 
 > import Basil.Core
 > import Basil.Query
-> import Basil.Database.InMemory.Cache
 > import Basil.Relations
+> import Basil.Database.InMemory.Cache
 > import Basil.Database.InMemory.Relations.Storage
 > import Basil.Database.InMemory.Relations
 > import Basil.References
@@ -29,10 +27,6 @@
 > import qualified Data.Set as S
 > import Data.Record.Label hiding (set)
 > import Prelude hiding (mod, lookup)
-
-%endif
-
-%if not query
 
 In this section we provide an interface for the in-memory database that can store and modify entities and relationships. 
 The final interface is summarized in section \ref{sec:inmemif}.
