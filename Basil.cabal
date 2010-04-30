@@ -27,12 +27,11 @@ exposed-modules:     Basil
                      Basil.Database.Relational.Relationships
                      Basil.Database.Relational.Schema
                      Basil.Database.Relational.Utils
-                     Basil.InMemory
-                     Basil.InMemory.Cache
-                     Basil.InMemory.Interface
-                     Basil.InMemory.Relations
-                     Basil.InMemory.Relations.Storage
-                     Basil.Interface
+                     Basil.Database.InMemory
+                     Basil.Database.InMemory.Cache
+                     Basil.Database.InMemory.Interface
+                     Basil.Database.InMemory.Relations
+                     Basil.Database.InMemory.Relations.Storage
                      Basil.Query
                      Basil.References
                      Basil.Relations

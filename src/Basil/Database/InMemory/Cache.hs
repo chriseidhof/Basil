@@ -1,17 +1,15 @@
 {-# LANGUAGE GADTs, TemplateHaskell          #-}
-module Basil.InMemory.Cache (TypeCache, Cache, emptyState, cached) where
+module Basil.Database.InMemory.Cache (TypeCache, Cache, emptyState, cached) where
 
 import Basil.Core
 import Basil.Data.TList4
 import Basil.Data.TList
 import Basil.References
 import Data.Record.Label 
-import qualified Data.Map as M
+import qualified Data.IntMap as M
 import qualified Data.Set as S
 
--- todo: replace by intmap
-
-newtype TypeCache a = TypeCache {_cached :: M.Map Int a} deriving Show
+newtype TypeCache a = TypeCache {_cached :: M.IntMap a} deriving Show
 
 type Cache model = HList (TMap TypeCache model)
 

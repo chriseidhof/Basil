@@ -2,7 +2,7 @@
 
 > {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances,
 >              Rank2Types, GADTs #-}
-> module Basil.InMemory.Relations.Storage where
+> module Basil.Database.InMemory.Relations.Storage where
 > 
 > import Basil.Relations.InitialValues
 > import Basil.Core

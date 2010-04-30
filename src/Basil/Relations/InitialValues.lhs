@@ -1,5 +1,3 @@
-%if False
-
 > {-# LANGUAGE TypeFamilies, ScopedTypeVariables, UndecidableInstances, Rank2Types, GADTs, EmptyDataDecls ,
 >              TypeOperators #-}
 > module Basil.Relations.InitialValues where
@@ -10,8 +8,6 @@
 > import Basil.Data.TList
 > import qualified Data.Set as S
 
-
-%endif
 
 When we create a new entity, we guarantee that all the corresponding
 relationships are initialized. For example, in our compilers ER model, whenever
@@ -110,10 +106,6 @@ We carry the |Dir| argument around explicitly so that we can pattern-match on it
 >                                              ,  Dir dir
 >                                              ,  Ix rels rel) 
 
-%if False
-
 > type family    Value entities cardinality typ :: *
 > type instance  Value entities One         t   = Ref entities t
 > type instance  Value entities Many        t   = S.Set (Ref entities t)
-
-%endif
