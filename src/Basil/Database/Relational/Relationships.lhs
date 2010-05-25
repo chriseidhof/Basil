@@ -66,6 +66,6 @@ and |:*:| types, which means that we can convert all lists of relationships.
 > toTable :: Rel phi m1 x m2 y -> TableT (HList (Foreign x :*: Foreign y :*: Nil))
 > toTable (Rel _ ixL nL _ ixR nR) = TableT table bij
 >  where table = (Table (nL ++ "_" ++ nR) $ Foreign "id_1" ixL .**. Foreign "id_2" ixR .**. Nil2)
->        bij  = id <-> id
+>        bij  = id :<->: id
 
 %endif

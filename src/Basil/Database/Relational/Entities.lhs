@@ -58,7 +58,7 @@ There is only one instance, for a record field containing type |K a|. As a const
 
 > instance (Selector s, Representable a rep) => GAttr (S s (K a)) rep where
 >  gattr s    = Attr (selName s) (baseCode (unK $ unS s))
->  gattrBij   = (toRep . unK . unS) <-> (S . K . fromRep)
+>  gattrBij   = (toRep . unK . unS) :<->: (S . K . fromRep)
 
 To derive a schema generically, we define the class |GSchema|.
 The type parameter |f| uniquely determines the |schema|, which is expressed
@@ -76,8 +76,8 @@ We omit the instances, they can be found in the code accompanying this thesis.
 
 > instance GSchema f schema => GSchema (C c f) schema where
 >   gschema ~(C f)   = gschema f
->   gbijection       = let (Bijection l r) = gbijection
->                      in (l . unC) <-> (C . r)
+>   gbijection       = let (l :<->: r) = gbijection
+>                      in (l . unC) :<->: (C . r)
 
 
 In the regular library, the structure of a record type is encoded as nested pairs of |S| constructors. 
@@ -86,15 +86,15 @@ Therefore, we prefix the our |:*:| type constructor with a |T|.
 
 > instance (GAttr (S s f) attr) => GSchema (S s f) (attr T.:*: Nil) where
 >   gschema f   = gattr f .**. Nil2
->   gbijection  = let (Bijection l r) = gattrBij
->                 in (\x -> l x .*. Nil) <-> (r . hHead)
+>   gbijection  = let (l :<->: r) = gattrBij
+>                 in (\x -> l x .*. Nil) :<->: (r . hHead)
 >
 > instance     (GAttr f attr, GSchema g gSchema) 
 >          =>  GSchema  (f :*: g) (attr T.:*: gSchema) where
 >   gschema ~(s :*: rest) = gattr s .**. gschema rest
->   gbijection = let (Bijection l r)   = gattrBij
->                    (Bijection l' r') = gbijection
->                in  (\(x :*: xs) -> l x .*. l' xs) <-> (\(Cons x xs) -> r x :*: r' xs)
+>   gbijection = let (l :<->: r)   = gattrBij
+>                    (l' :<->: r') = gbijection
+>                in  (\(x :*: xs) -> l x .*. l' xs) :<->: (\(Cons x xs) -> r x :*: r' xs)
 
 > class GName f where
 >   gName :: f a -> String
@@ -116,8 +116,8 @@ We define a datatype |TableT| that describes simple tables. It is indexed by
 
 > table' :: (Regular a, GName (PF a), GSchema (PF a) schema) => a -> TableT a
 > table' x = TableT (Table (gName $ from x) $ gschema (from x)) bij
->  where (Bijection l r) = gbijection
->        bij = l . from <-> to . r
+>  where (l :<->: r) = gbijection
+>        bij = l . from :<->: to . r
 
 > schema' :: (Regular a, GSchema (PF a) schema) => a -> Schema env schema
 > schema' = gschema . from

@@ -40,8 +40,7 @@ exposed-modules:     Basil
 
 build-depends:       base >= 3 && < 5,
                      containers >= 0.2,
-                     fclabels >= 0.4.2,
-                     Takusen >= 0.8.6,
+                     fclabels >= 1.0,
                      regular,
                      monads-fd,
                      transformers,

@@ -25,7 +25,7 @@
 > import qualified Data.Map as M
 > import qualified Data.IntMap as I
 > import qualified Data.Set as S
-> import Data.Record.Label hiding (set)
+> import Data.Record.Label
 > import Prelude hiding (mod, lookup)
 
 In this section we provide an interface for the in-memory database that can store and modify entities and relationships. 
@@ -57,7 +57,7 @@ To find an entity we define the |find| function, which looks up the entity in th
 \label{sec:inmemfind}
 
 > find :: Ref entities entity -> Basil entities rels (Maybe entity)
-> find (Ref tix entity)  =    I.lookup entity . get cached . lookupMapHList tix
+> find (Ref tix entity)  =    I.lookup entity . getL cached . lookupMapHList tix
 >                        <$>  getM cache
 
 
@@ -81,7 +81,7 @@ Finally, we return the newly created reference.
 >   ident <- getM freshVariable
 >   modM freshVariable (+1)
 >   let  ref            = Ref tix ident
->        saveData       = mod  cached   (I.insert ident i)
+>        saveData       = modL  cached   (I.insert ident i)
 >   modM cache    (modHList (saveData) tix)
 >   modM relCache (storeAll ref rels)
 >   return ref
@@ -146,7 +146,7 @@ Querying the database is comparable to |find|, defined in section \ref{sec:inmem
 > query tix cond  =  let look  =  mapFst (Ref tix) 
 >                              .  I.toList 
 >                              .  I.filter (eval cond) 
->                              .  get cached . lookupMapHList tix
+>                              .  getL cached . lookupMapHList tix
 >                     in look <$> getM cache
 
 
@@ -159,7 +159,7 @@ Querying the database is comparable to |find|, defined in section \ref{sec:inmem
 > findAll :: Ix entities entity -> Basil entities rels [(Ref entities entity, entity)]
 > findAll tix  =  let look  =  mapFst (Ref tix) 
 >                         .  I.toList 
->                         .  get cached . lookupMapHList tix
+>                         .  getL cached . lookupMapHList tix
 >                in look <$> getM cache
 
 > mapFst f = map (\(x,y) -> (f x, y))
@@ -169,7 +169,7 @@ An instance for the |Persistent| typeclass:
 > attr :: Ref entities entity -> (entity :-> att) -> Basil entities rels att
 > attr r@(Ref tix entity) at = do val <- find r
 >                                 case val of
->                                      Just x  -> return $ get at x
+>                                      Just x  -> return $ getL at x
 >                                      Nothing -> error "Not found in cache."
 > 
 
@@ -189,20 +189,20 @@ An instance for the |Persistent| typeclass:
 > 
 > -- State helper functions
 > cache :: BasilState entities rels :-> Cache entities 
-> cache = label getCache setCache
+> cache = lens getCache setCache
 >  where getCache :: BasilState entities rels -> Cache entities 
 >        getCache (BasilState x _ _) = x
 >        setCache :: Cache entities -> BasilState entities rels -> BasilState entities rels
 >        setCache x (BasilState _ y z) = BasilState x y z
 > freshVariable :: BasilState entities rels :-> Int
-> freshVariable = label get' set'
+> freshVariable = lens get' set'
 >  where get' :: BasilState entities rels -> Int
 >        get' (BasilState _ _ x) = x
 >        set' :: Int -> BasilState entities rels -> BasilState entities rels
 >        set' z (BasilState x y _) = BasilState x y z
 > 
 > relCache ::(ERModel entities rels) => BasilState entities rels :-> RelCache rels
-> relCache = label get' set'
+> relCache = lens get' set'
 >  where get' :: (ERModel entities rels) => BasilState entities rels -> RelCache rels
 >        get' (BasilState _ x _) = x
 >        set' :: (ERModel entities rels) => RelCache rels -> BasilState entities rels -> BasilState entities rels
